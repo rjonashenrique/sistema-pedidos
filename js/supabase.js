@@ -120,14 +120,11 @@
   async function createOrder(c, store) {
     var u = await user();
     if (!u || !client) return null;
-    var orderNumber = String(Date.now()).slice(-8);
     var pr = await profile();
     var couponCode = null;
     if (c.cp && window.LOJA.cupons) { Object.keys(window.LOJA.cupons).some(function (k) { if (window.LOJA.cupons[k] && window.LOJA.cupons[k].tipo === c.cp.tipo && +window.LOJA.cupons[k].valor === +c.cp.valor) { couponCode = k; return true; } return false; }); }
     var payload = {
-      user_id: u.id,
       store_slug: store.slug || null,
-      order_number: orderNumber,
       status: 'whatsapp_pending',
       order_type: c.entrega ? 'delivery' : 'pickup',
       customer_name: c.f.nome.trim(),
@@ -140,13 +137,22 @@
       total: c.total,
       coupon_code: couponCode,
       notes: c.f.obs.trim() || null,
-      scheduled_for: c.st.aberto ? null : new Date().toISOString()
+      scheduled_for: c.st.aberto ? null : new Date().toISOString(),
+      items: c.itens.map(function (i) {
+        return { product_id: i.p.id, product_name: i.p.nome, quantity: i.l.qty, unit_price: i.unitP, line_total: i.total, selections: i.l.sel || {}, observation: i.l.obs || null };
+      })
     };
-    var r = await client.from('orders').insert(payload).select('id,order_number').single();
+    if (client.rpc) {
+      var rr = await client.rpc('create_customer_order', { p_order: payload });
+      if (!rr.error && rr.data) return Array.isArray(rr.data) ? rr.data[0] : rr.data;
+      if (rr.error && rr.error.code !== '42883') throw rr.error;
+    }
+    // Compatibilidade com bancos anteriores à migração V8.
+    var orderNumber = String(Date.now()).slice(-8);
+    var directPayload = Object.assign({}, payload, { user_id: u.id, order_number: orderNumber }); delete directPayload.items;
+    var r = await client.from('orders').insert(directPayload).select('id,order_number').single();
     if (r.error) throw r.error;
-    var rows = c.itens.map(function (i) {
-      return { order_id: r.data.id, product_id: i.p.id, product_name: i.p.nome, quantity: i.l.qty, unit_price: i.unitP, line_total: i.total, selections: i.l.sel || {}, observation: i.l.obs || null };
-    });
+    var rows = payload.items.map(function (i) { return Object.assign({}, i, { order_id: r.data.id }); });
     var ir = await client.from('order_items').insert(rows);
     if (ir.error) throw ir.error;
     return r.data;

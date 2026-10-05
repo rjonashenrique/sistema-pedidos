@@ -321,6 +321,24 @@ No GitHub, confirme com `git status` e `git ls-files config/loja.js`. Se o segun
 
 Para Vercel, a URL padrão configurada para a loja é `https://{slug}.vercel.app`; se houver domínio próprio, preencha `seo.url` no `config/loja.js`.
 
+
+## V8 — Sistema completo, segurança e operação
+
+A V8 consolida cliente, conta, pedidos, Admin Gerador e Central em uma base única.
+
+- Criação de pedidos autenticados com RPC transacional (`create_customer_order`), evitando pedido salvo sem seus itens quando a migração V8 estiver aplicada.
+- RLS reforçado: o cliente não precisa de permissão para editar pedidos depois da criação.
+- Índices adicionais para operação por loja, status e cliente.
+- Validação e mensagens de conta mais amigáveis, sem exibir detalhes técnicos do Supabase ao cliente.
+- Indicador de conexão offline no cardápio.
+- Service Worker atualizado para a geração V8, evitando cache antigo após nova publicação.
+- Área do Cliente, rastreamento, favoritos, pedidos, endereços, perfil e segurança preservados.
+- Admin Gerador + Central multi-lojas, Realtime, filtros, métricas e exportação CSV preservados.
+
+### Migração Supabase V8
+
+Execute o arquivo `supabase/schema.sql` no projeto Supabase da loja. A seção V8 é idempotente para a estrutura criada pelo sistema. Depois da migração, o cliente passa a usar a função transacional para registrar pedido + itens.
+
 ## V7.3 — Vercel + Netlify (sem marca d’água)
 
 Esta versão é compatível com **Vercel e Netlify**. As duas plataformas são apenas opções de hospedagem: o cliente final não recebe badge, marca d’água ou branding visual de nenhuma delas.

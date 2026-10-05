@@ -357,7 +357,16 @@
   }
   function abrirConta(mode) { set({ account: true, accountMode: mode || 'login', accountTab: mode === 'profile' ? 'overview' : (mode || 'login') }); }
   function fecharConta() { set({ account: null }); }
-  function contaErro(err) { return err && err.message ? err.message : 'Não foi possível concluir. Tente novamente.'; }
+  function contaErro(err) {
+    var m = String(err && err.message || '').toLowerCase();
+    if (m.indexOf('invalid login credentials') >= 0) return 'E-mail ou senha incorretos.';
+    if (m.indexOf('email not confirmed') >= 0) return 'Confirme seu e-mail antes de entrar.';
+    if (m.indexOf('user already registered') >= 0) return 'Este e-mail já possui uma conta.';
+    if (m.indexOf('password') >= 0 && m.indexOf('at least') >= 0) return 'A senha não atende aos requisitos mínimos.';
+    if (m.indexOf('rate limit') >= 0 || m.indexOf('too many requests') >= 0) return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    if (m.indexOf('failed to fetch') >= 0 || m.indexOf('network') >= 0) return 'Sem conexão com o serviço. Verifique a internet e tente novamente.';
+    return 'Não foi possível concluir agora. Tente novamente.';
+  }
   function contaNome() { return S.accountData && S.accountData.full_name ? S.accountData.full_name.split(' ')[0] : (S.accountData && S.accountData.email ? S.accountData.email.split('@')[0] : 'Minha conta'); }
   async function carregarConta() {
     if (!contaConfigurada()) return set({ accountData: null, accountOrders: [], accountAddresses: [] });
@@ -508,6 +517,9 @@
       : (!st.prox ? 'Sem previsão' : st.prox.off === 0 ? 'Abre às ' + hora(st.prox.ini)
         : st.prox.off === 1 ? 'Abre amanhã, ' + hora(st.prox.ini) : 'Abre ' + DIAS[st.prox.dia] + ', ' + hora(st.prox.ini));
     var h = '';
+    if (navigator && navigator.onLine === false) {
+      h += '<div class="cliente-offline-banner" role="status">Você está sem conexão. O cardápio continua disponível, mas login e envio de pedido dependem da internet.</div>';
+    }
 
     if (!aberto) {
       h += '<div style="background:var(--cor2);color:#fff;font-size:13px;line-height:1.35;padding:10px 20px;display:flex;gap:10px;align-items:center">' +

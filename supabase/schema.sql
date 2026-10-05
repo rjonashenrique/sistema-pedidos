@@ -225,3 +225,83 @@ begin
     alter publication supabase_realtime add table public.orders;
   end if;
 end $$;
+
+-- ==============================================================
+-- V8 — segurança e criação transacional de pedidos
+-- Execute esta seção no Supabase antes de usar o fluxo transacional.
+
+-- Clientes não precisam alterar pedidos depois de criados.
+drop policy if exists "orders_update_own" on public.orders;
+
+-- Evita mais de um endereço principal por cliente.
+create unique index if not exists customer_addresses_one_default_idx
+on public.customer_addresses(user_id)
+where is_default = true;
+
+create index if not exists orders_store_status_created_idx
+on public.orders(store_slug, status, created_at desc);
+
+create index if not exists orders_store_customer_idx
+on public.orders(store_slug, customer_phone);
+
+-- RPC transacional: pedido + itens entram juntos ou não entram.
+create or replace function public.create_customer_order(p_order jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_order_id uuid;
+  v_order_number text;
+  v_item jsonb;
+begin
+  if v_user is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '42501';
+  end if;
+
+  if nullif(trim(p_order->>'store_slug'),'') is null then raise exception 'STORE_REQUIRED'; end if;
+  if nullif(trim(p_order->>'customer_name'),'') is null then raise exception 'CUSTOMER_NAME_REQUIRED'; end if;
+  if nullif(trim(p_order->>'payment_method'),'') is null then raise exception 'PAYMENT_REQUIRED'; end if;
+  if coalesce(jsonb_array_length(p_order->'items'),0) < 1 then raise exception 'ITEMS_REQUIRED'; end if;
+
+  v_order_number := to_char(clock_timestamp(),'YYMMDDHH24MISSMS') || lpad((floor(random()*1000))::int::text,3,'0');
+
+  insert into public.orders (
+    user_id, store_slug, order_number, status, order_type,
+    customer_name, customer_phone, delivery_address, payment_method,
+    subtotal, delivery_fee, discount, total, coupon_code, notes, scheduled_for
+  ) values (
+    v_user, p_order->>'store_slug', v_order_number, coalesce(p_order->>'status','whatsapp_pending'),
+    p_order->>'order_type', p_order->>'customer_name', p_order->>'customer_phone',
+    nullif(p_order->>'delivery_address',''), p_order->>'payment_method',
+    greatest(coalesce((p_order->>'subtotal')::numeric,0),0),
+    greatest(coalesce((p_order->>'delivery_fee')::numeric,0),0),
+    greatest(coalesce((p_order->>'discount')::numeric,0),0),
+    greatest(coalesce((p_order->>'total')::numeric,0),0),
+    nullif(p_order->>'coupon_code',''), nullif(p_order->>'notes',''),
+    nullif(p_order->>'scheduled_for','')::timestamptz
+  ) returning id, order_number into v_order_id, v_order_number;
+
+  for v_item in select * from jsonb_array_elements(p_order->'items') loop
+    insert into public.order_items (
+      order_id, product_id, product_name, quantity, unit_price, line_total, selections, observation
+    ) values (
+      v_order_id,
+      v_item->>'product_id',
+      v_item->>'product_name',
+      greatest((v_item->>'quantity')::integer,1),
+      greatest(coalesce((v_item->>'unit_price')::numeric,0),0),
+      greatest(coalesce((v_item->>'line_total')::numeric,0),0),
+      coalesce(v_item->'selections','{}'::jsonb),
+      nullif(v_item->>'observation','')
+    );
+  end loop;
+
+  return jsonb_build_object('id',v_order_id,'order_number',v_order_number);
+end;
+$$;
+
+revoke all on function public.create_customer_order(jsonb) from public, anon;
+grant execute on function public.create_customer_order(jsonb) to authenticated;
