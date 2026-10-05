@@ -68,8 +68,33 @@
     if (r.error) throw r.error;
     return r.data || [];
   }
+  async function deleteAddress(id) {
+    var r = await client.from('customer_addresses').delete().eq('id', id);
+    if (r.error) throw r.error;
+  }
+  async function setDefaultAddress(id) {
+    var u = await user();
+    if (!u) throw new Error('Você precisa entrar na sua conta.');
+    var clear = await client.from('customer_addresses').update({ is_default: false }).eq('user_id', u.id);
+    if (clear.error) throw clear.error;
+    var r = await client.from('customer_addresses').update({ is_default: true }).eq('id', id).eq('user_id', u.id);
+    if (r.error) throw r.error;
+  }
+  async function updatePassword(password) {
+    if (!client) throw new Error('Supabase ainda não foi configurado para esta loja.');
+    var r = await client.auth.updateUser({ password: password });
+    if (r.error) throw r.error;
+  }
+  async function orderItems(orderId) {
+    var r = await client.from('order_items').select('id,product_id,product_name,quantity,unit_price,line_total,selections,observation').eq('order_id', orderId).order('created_at', { ascending: true });
+    if (r.error) throw r.error;
+    return r.data || [];
+  }
   async function saveAddress(a) {
+    var u = await user();
+    if (!u) throw new Error('Você precisa entrar na sua conta.');
     var payload = {
+      user_id: u.id,
       label: a.label || 'Principal',
       address_line: a.address_line || '',
       is_default: !!a.is_default
@@ -131,5 +156,5 @@
     var sub = client.auth.onAuthStateChange(function (event, sessionValue) { callback(event, sessionValue); });
     return function () { if (sub.data && sub.data.subscription) sub.data.subscription.unsubscribe(); };
   }
-  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, addresses: addresses, saveAddress: saveAddress, orders: orders, createOrder: createOrder, subscribeOrder: subscribeOrder, onAuth: onAuth };
+  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, updatePassword: updatePassword, addresses: addresses, saveAddress: saveAddress, deleteAddress: deleteAddress, setDefaultAddress: setDefaultAddress, orders: orders, orderItems: orderItems, createOrder: createOrder, subscribeOrder: subscribeOrder, onAuth: onAuth };
 })();

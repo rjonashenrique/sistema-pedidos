@@ -155,7 +155,7 @@
   // ---------------------------------------------------------------- estado
   var S = {
     cat: 'Todos', q: '', lines: [], ultimo: [], detail: null, sel: {}, detQty: 1, detObs: '',
-    cartOpen: false, toast: '', cupomIn: '', cupom: '', cupomErro: '', enviado: false, lastWa: '', favorites: [], recent: [], account: null, accountMode: 'login', accountLoading: false, accountData: null, accountOrders: [], accountAddresses: [], trackOrder: null, trackUnsub: null,
+    cartOpen: false, toast: '', cupomIn: '', cupom: '', cupomErro: '', enviado: false, lastWa: '', favorites: [], recent: [], account: null, accountMode: 'login', accountTab: 'overview', accountLoading: false, accountData: null, accountOrders: [], accountAddresses: [], trackOrder: null, trackUnsub: null,
     form: { nome: '', tipo: 'entrega', endereco: '', pagamento: (L.pagamentos || [])[0] || '', troco: '', obs: '' }
   };
   (function carregar() {
@@ -355,7 +355,7 @@
       configurada: !!(c.enabled && c.url && c.publishableKey)
     };
   }
-  function abrirConta(mode) { set({ account: true, accountMode: mode || 'login' }); }
+  function abrirConta(mode) { set({ account: true, accountMode: mode || 'login', accountTab: mode === 'profile' ? 'overview' : (mode || 'login') }); }
   function fecharConta() { set({ account: null }); }
   function contaErro(err) { return err && err.message ? err.message : 'Não foi possível concluir. Tente novamente.'; }
   function contaNome() { return S.accountData && S.accountData.full_name ? S.accountData.full_name.split(' ')[0] : (S.accountData && S.accountData.email ? S.accountData.email.split('@')[0] : 'Minha conta'); }
@@ -408,58 +408,70 @@
     return h;
   }
 
+  function statusCliente(status) { return STATUS_CLIENTE[status] ? STATUS_CLIENTE[status][0] : String(status || 'Pedido'); }
+  function dataHoraCliente(v) { try { return new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
   function renderConta() {
     if (!S.account) return '';
     var logged = !!S.accountData;
     var disabled = S.accountLoading ? ' disabled' : '';
-    var h = '<div style="position:fixed;inset:0;background:rgba(20,14,10,.48);z-index:60;display:flex;align-items:flex-end;justify-content:center">' +
-      '<div style="width:100%;max-width:480px;max-height:92vh;overflow:auto;background:#F7F4F0;border-radius:28px 28px 0 0;padding:22px 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.18)">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px"><div><div style="font-size:12px;font-weight:700;color:var(--escuro);text-transform:uppercase;letter-spacing:.08em">Conta</div><div style="font-size:24px;font-weight:700;margin-top:4px">' + (logged ? 'Olá, ' + esc(contaNome()) : (S.accountMode === 'signup' ? 'Criar sua conta' : 'Entrar na sua conta')) + '</div></div><button data-a="accountClose" aria-label="Fechar" style="width:42px;height:42px;border:0;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">' + X_ICON + '</button></div>';
+    var tab = S.accountTab || 'overview';
+    var h = '<div class="cliente-account-overlay"><div class="cliente-account-sheet">' +
+      '<div class="cliente-account-head"><div><div class="cliente-account-kicker">Área do cliente</div><div class="cliente-account-title">' + (logged ? 'Olá, ' + esc(contaNome()) : (S.accountMode === 'signup' ? 'Criar sua conta' : 'Entrar na sua conta')) + '</div></div><button data-a="accountClose" class="cliente-icon-btn" aria-label="Fechar">' + X_ICON + '</button></div>';
     if (!contaConfigurada()) {
-      var ci = contaConfigInfo();
-      h += '<div style="background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:16px;padding:14px;font-size:13px;line-height:1.55">' +
-        '<b>Conta do cliente indisponível nesta loja.</b><br>' +
-        'O login e o cadastro ainda não foram ativados para esta loja. Tente novamente mais tarde.' +
-        '</div></div></div>';
+      h += '<div class="cliente-account-notice"><b>Conta do cliente indisponível nesta loja.</b><br>O login e o cadastro ainda não foram ativados para esta loja. Tente novamente mais tarde.</div></div></div>';
       return h;
     }
     if (!logged) {
       if (S.accountMode === 'signup') {
-        h += '<form data-form="signup" style="display:flex;flex-direction:column;gap:12px">' +
-          '<input name="full_name" autocomplete="name" required placeholder="Nome completo" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<input name="phone" autocomplete="tel" placeholder="WhatsApp (opcional)" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<input name="email" type="email" autocomplete="email" required placeholder="E-mail" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<input name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="Senha (mínimo 6 caracteres)" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<input name="password2" type="password" autocomplete="new-password" minlength="6" required placeholder="Confirmar senha" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<button' + disabled + ' style="height:54px;border:0;border-radius:27px;background:var(--cor);color:#fff;font-size:15px;font-weight:700;cursor:pointer">Criar minha conta</button></form>' +
-          '<button data-a="accountMode" data-v="login" style="width:100%;height:46px;border:0;background:transparent;color:#57504A;font-size:14px;cursor:pointer;margin-top:8px">Já tenho uma conta → Entrar</button>';
+        h += '<form data-form="signup" class="cliente-account-form">' +
+          '<input name="full_name" autocomplete="name" required placeholder="Nome completo">' +
+          '<input name="phone" autocomplete="tel" placeholder="WhatsApp (opcional)">' +
+          '<input name="email" type="email" autocomplete="email" required placeholder="E-mail">' +
+          '<input name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="Senha (mínimo 6 caracteres)">' +
+          '<input name="password2" type="password" autocomplete="new-password" minlength="6" required placeholder="Confirmar senha">' +
+          '<button' + disabled + ' class="cliente-primary-btn">Criar minha conta</button></form>' +
+          '<button data-a="accountMode" data-v="login" class="cliente-link-btn">Já tenho uma conta → Entrar</button>';
       } else {
-        h += '<form data-form="login" style="display:flex;flex-direction:column;gap:12px">' +
-          '<input name="email" type="email" autocomplete="email" required placeholder="E-mail" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<input name="password" type="password" autocomplete="current-password" required placeholder="Senha" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-          '<button' + disabled + ' style="height:54px;border:0;border-radius:27px;background:var(--cor);color:#fff;font-size:15px;font-weight:700;cursor:pointer">Entrar</button></form>' +
-          '<button data-a="accountReset" style="width:100%;height:42px;border:0;background:transparent;color:#57504A;font-size:13px;cursor:pointer">Esqueci minha senha</button>' +
-          '<div style="text-align:center;font-size:14px;color:#6B635C;margin-top:4px">Ainda não tem uma conta? <button data-a="accountMode" data-v="signup" style="border:0;background:none;color:var(--cor);font-weight:700;cursor:pointer">Cadastre-se</button></div>';
+        h += '<form data-form="login" class="cliente-account-form">' +
+          '<input name="email" type="email" autocomplete="email" required placeholder="E-mail">' +
+          '<input name="password" type="password" autocomplete="current-password" required placeholder="Senha">' +
+          '<button' + disabled + ' class="cliente-primary-btn">Entrar</button></form>' +
+          '<button data-a="accountReset" class="cliente-link-btn">Esqueci minha senha</button>' +
+          '<div class="cliente-switch">Ainda não tem uma conta? <button data-a="accountMode" data-v="signup">Cadastre-se</button></div>';
       }
-      h += '<div data-k="accountError" style="min-height:0;margin-top:10px;color:#B91C1C;font-size:13px;text-align:center"></div>';
-    } else {
-      var d = S.accountData || {};
-      h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px"><button data-a="ordersNav" style="border:0;background:#fff;border-radius:16px;padding:12px 6px;font-size:12px;font-weight:700;cursor:pointer">📦<br>Pedidos</button><button data-a="favoriteNav" style="border:0;background:#fff;border-radius:16px;padding:12px 6px;font-size:12px;font-weight:700;cursor:pointer">♥<br>Favoritos</button><button data-a="closeCart" style="border:0;background:#fff;border-radius:16px;padding:12px 6px;font-size:12px;font-weight:700;cursor:pointer">🛒<br>Comprar</button></div>' + '<div style="display:flex;flex-direction:column;gap:12px">'
-        '<div style="background:#fff;border-radius:18px;padding:16px"><div style="font-size:12px;color:#6B635C">E-mail</div><div style="font-size:15px;font-weight:600;margin-top:4px">' + esc(d.email || '') + '</div></div>' +
-        '<form data-form="profile" style="display:flex;flex-direction:column;gap:10px">' +
-        '<input name="full_name" value="' + esc(d.full_name || '') + '" autocomplete="name" placeholder="Nome completo" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-        '<input name="phone" value="' + esc(d.phone || '') + '" autocomplete="tel" placeholder="WhatsApp" style="height:52px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;font-size:15px;background:#fff;outline:0">' +
-        '<button' + disabled + ' style="height:50px;border:0;border-radius:25px;background:var(--cor);color:#fff;font-weight:700;cursor:pointer">Salvar dados</button></form>' +
-        '<div style="font-size:16px;font-weight:700;margin-top:8px">Endereços salvos</div>' +
-        (S.accountAddresses.length ? S.accountAddresses.map(function (a) { return '<div style="background:#fff;border-radius:16px;padding:14px"><div style="font-size:12px;color:#6B635C">' + esc(a.label || 'Endereço') + '</div><div style="font-size:14px;font-weight:600;margin-top:4px">' + esc(a.address_line) + '</div></div>'; }).join('') : '<div style="background:#fff;border-radius:16px;padding:16px;text-align:center;color:#6B635C;font-size:13px">Nenhum endereço salvo.</div>') +
-        '<form data-form="address" style="display:flex;flex-direction:column;gap:8px"><input name="label" placeholder="Nome do endereço (ex.: Casa)" style="height:48px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;background:#fff"><input name="address_line" required placeholder="Rua, número, bairro, complemento" style="height:48px;border:1px solid #E0D9D1;border-radius:14px;padding:0 14px;background:#fff"><label style="font-size:13px;color:#57504A;display:flex;align-items:center;gap:8px"><input type="checkbox" name="is_default"> Usar como endereço principal</label><button style="height:46px;border:1px solid #E0D9D1;border-radius:23px;background:#fff;font-weight:600;cursor:pointer">Salvar endereço</button></form>' +
-        '<div style="font-size:16px;font-weight:700;margin-top:8px">Meus pedidos</div>' +
-        (S.accountOrders.length ? S.accountOrders.map(function (o) { return '<button data-a="trackOrder" data-v="' + esc(o.id) + '" style="width:100%;text-align:left;border:0;background:#fff;border-radius:16px;padding:14px;display:flex;justify-content:space-between;gap:10px;cursor:pointer"><div><div style="font-weight:700">Pedido #' + esc(o.order_number) + '</div><div style="font-size:12px;color:#6B635C;margin-top:4px">' + esc(o.status) + ' · ' + new Date(o.created_at).toLocaleDateString('pt-BR') + '</div></div><strong>' + M(+o.total) + '</strong></button>'; }).join('') : '<div style="background:#fff;border-radius:16px;padding:18px;text-align:center;color:#6B635C;font-size:13px">Você ainda não possui pedidos salvos.</div>') +
-        '<button data-a="accountRefresh" style="height:46px;border:1px solid #E0D9D1;border-radius:23px;background:#fff;color:#1C1917;font-weight:600;cursor:pointer">Atualizar pedidos</button>' +
-        '<button data-a="accountLogout" style="height:46px;border:0;border-radius:23px;background:#EFEAE4;color:#7F1D1D;font-weight:600;cursor:pointer">Sair da conta</button>' +
-        '<div data-k="accountError" style="min-height:0;color:#B91C1C;font-size:13px;text-align:center"></div></div>';
+      h += '<div data-k="accountError" class="cliente-account-error"></div></div></div>'; return h;
     }
-    return h + '</div></div>';
+    var d = S.accountData || {};
+    var totalPedidos = S.accountOrders.length;
+    var totalGasto = S.accountOrders.reduce(function(a,o){ return a + (+o.total || 0); }, 0);
+    h += '<div class="cliente-account-stats"><div><b>' + totalPedidos + '</b><span>Pedidos</span></div><div><b>' + M(totalGasto) + '</b><span>Total</span></div><div><b>' + S.accountAddresses.length + '</b><span>Endereços</span></div></div>';
+    h += '<div class="cliente-account-tabs">' +
+      ['overview','orders','addresses','profile'].map(function(x){ var labels={overview:'Visão geral',orders:'Pedidos',addresses:'Endereços',profile:'Perfil'}; return '<button data-a="accountTab" data-v="'+x+'" class="'+(tab===x?'ativo':'')+'">'+labels[x]+'</button>'; }).join('') + '</div>';
+    if (tab === 'overview') {
+      h += '<div class="cliente-account-grid">' +
+        '<button data-a="accountTab" data-v="orders"><span>📦</span><b>Meus pedidos</b><small>Acompanhe e repita pedidos</small></button>' +
+        '<button data-a="accountTab" data-v="addresses"><span>📍</span><b>Meus endereços</b><small>Salve seus locais favoritos</small></button>' +
+        '<button data-a="favoriteNav"><span>♥</span><b>Favoritos</b><small>' + S.favorites.length + ' itens salvos</small></button>' +
+        '<button data-a="accountTab" data-v="profile"><span>👤</span><b>Meu perfil</b><small>Dados pessoais e senha</small></button>' +
+      '</div>';
+      var last = S.accountOrders[0];
+      if (last) h += '<div class="cliente-section"><div class="cliente-section-title"><b>Pedido mais recente</b><button data-a="trackOrder" data-v="'+esc(last.id)+'">Acompanhar</button></div><div class="cliente-order-card"><div><b>#'+esc(last.order_number)+'</b><small>'+esc(statusCliente(last.status))+' · '+dataHoraCliente(last.created_at)+'</small></div><strong>'+M(+last.total)+'</strong></div></div>';
+      h += '<div class="cliente-account-actions"><button data-a="shareStore">Compartilhar loja</button><button data-a="accountRefresh">Atualizar</button><button data-a="accountLogout" class="sair">Sair da conta</button></div>';
+    } else if (tab === 'orders') {
+      h += '<div class="cliente-section-title"><b>Histórico de pedidos</b><button data-a="accountRefresh">Atualizar</button></div>';
+      h += S.accountOrders.length ? S.accountOrders.map(function(o){ return '<div class="cliente-order-card cliente-order-full"><div><b>Pedido #'+esc(o.order_number)+'</b><small>'+esc(statusCliente(o.status))+' · '+dataHoraCliente(o.created_at)+'</small><small>'+esc(o.order_type==='delivery'?'Entrega':'Retirada')+' · '+M(+o.total)+'</small></div><div class="cliente-order-actions"><button data-a="trackOrder" data-v="'+esc(o.id)+'">Acompanhar</button><button data-a="repeatOrder" data-v="'+esc(o.id)+'">Repetir</button></div></div>'; }).join('') : '<div class="cliente-empty">Você ainda não possui pedidos salvos.</div>';
+    } else if (tab === 'addresses') {
+      h += '<div class="cliente-section-title"><b>Endereços salvos</b><span>Use no checkout</span></div>';
+      h += S.accountAddresses.length ? S.accountAddresses.map(function(a){ return '<div class="cliente-address-card"><div><b>'+esc(a.label || 'Endereço')+(a.is_default?' <em>Principal</em>':'')+'</b><p>'+esc(a.address_line)+'</p></div><div class="cliente-address-actions">'+(!a.is_default?'<button data-a="defaultAddress" data-v="'+esc(a.id)+'">Principal</button>':'')+'<button data-a="useAddress" data-v="'+esc(a.id)+'">Usar</button><button data-a="deleteAddress" data-v="'+esc(a.id)+'" class="danger">Excluir</button></div></div>'; }).join('') : '<div class="cliente-empty">Nenhum endereço salvo.</div>';
+      h += '<form data-form="address" class="cliente-address-form"><input name="label" placeholder="Nome do endereço (ex.: Casa)"><input name="address_line" required placeholder="Rua, número, bairro, complemento"><label><input type="checkbox" name="is_default"> Usar como endereço principal</label><button class="cliente-primary-btn">Salvar endereço</button></form>';
+    } else {
+      h += '<div class="cliente-profile-box"><div class="cliente-avatar">'+esc((d.full_name || d.email || '?').slice(0,1).toUpperCase())+'</div><div><b>'+esc(d.full_name || 'Cliente')+'</b><small>'+esc(d.email || '')+'</small></div></div>';
+      h += '<form data-form="profile" class="cliente-account-form"><label>Nome completo<input name="full_name" value="'+esc(d.full_name || '')+'" autocomplete="name"></label><label>WhatsApp<input name="phone" value="'+esc(d.phone || '')+'" autocomplete="tel"></label><button'+disabled+' class="cliente-primary-btn">Salvar dados</button></form>';
+      h += '<div class="cliente-security"><b>Segurança</b><small>Atualize sua senha sempre que quiser.</small><form data-form="password" class="cliente-account-form"><input name="password" type="password" minlength="6" required autocomplete="new-password" placeholder="Nova senha"><input name="password2" type="password" minlength="6" required autocomplete="new-password" placeholder="Confirmar nova senha"><button'+disabled+' class="cliente-secondary-btn">Atualizar senha</button></form></div>';
+      h += '<div class="cliente-account-actions"><button data-a="accountLogout" class="sair">Sair da conta</button></div>';
+    }
+    h += '<div data-k="accountError" class="cliente-account-error"></div></div></div>';
+    return h;
   }
 
   async function salvarPedidoConta(c) {
@@ -931,8 +943,12 @@
     trackOrder: function (id) { var o = S.accountOrders.find(function (x) { return String(x.id) === String(id); }); if (o) abrirRastreamento(o); },
     trackClose: function () { fecharRastreamento(); },
     ordersRefresh: async function () { await carregarConta(); if (S.trackOrder) { var o=S.accountOrders.find(function(x){return String(x.id)===String(S.trackOrder.id);}); if(o) set({trackOrder:Object.assign({},o)}); } flash('Pedidos atualizados.'); },
-    ordersNav: function () { if (!S.accountData) return abrirConta('login'); abrirConta('profile'); carregarConta(); },
-    accountOpen: function () { abrirConta(S.accountData ? 'profile' : 'login'); carregarConta(); },
+    ordersNav: function () { if (!S.accountData) return abrirConta('login'); abrirConta('profile'); set({ accountTab: 'orders' }); carregarConta(); },
+    accountTab: function (v) { set({ accountTab: v || 'overview' }); },
+    deleteAddress: async function (id) { if (!confirm('Excluir este endereço?')) return; try { await AppSupabase.deleteAddress(id); await carregarConta(); flash('Endereço excluído.'); } catch (e) { flash(contaErro(e)); } },
+    defaultAddress: async function (id) { try { await AppSupabase.setDefaultAddress(id); await carregarConta(); flash('Endereço principal atualizado.'); } catch (e) { flash(contaErro(e)); } },
+    repeatOrder: async function (id) { try { var rows = await AppSupabase.orderItems(id); var added=0; rows.forEach(function(i){ if (BY_ID[i.product_id] && disponivel(BY_ID[i.product_id])) { addLine(i.product_id, +i.quantity || 1, i.selections || {}, i.observation || ''); added += (+i.quantity || 1); } }); if (added) { fecharConta(); flash(added + ' item(ns) adicionados ao carrinho.'); setTimeout(function(){ set({ cartOpen: true }); }, 80); } else flash('Os itens desse pedido não estão mais disponíveis.'); } catch (e) { flash(contaErro(e)); } },
+    accountOpen: function () { abrirConta(S.accountData ? 'profile' : 'login'); if (S.accountData) set({ accountTab: 'overview' }); carregarConta(); },
     accountClose: function () { fecharConta(); },
     accountMode: function (v) { set({ accountMode: v, accountData: null }); },
     accountRefresh: function () { carregarConta(); },
@@ -986,6 +1002,11 @@
       } else if (kind === 'profile') {
         var pr = await AppSupabase.updateProfile({ full_name: String(fd.get('full_name')).trim(), phone: String(fd.get('phone')).trim() });
         set({ accountData: pr, accountLoading: false }); flash('Dados atualizados.');
+      } else if (kind === 'password') {
+        var np = String(fd.get('password')), np2 = String(fd.get('password2'));
+        if (np.length < 6) throw new Error('A nova senha precisa ter pelo menos 6 caracteres.');
+        if (np !== np2) throw new Error('As novas senhas não conferem.');
+        await AppSupabase.updatePassword(np); set({ accountLoading: false }); form.reset(); flash('Senha atualizada com sucesso.');
       }
     } catch (err) {
       set({ accountLoading: false });
