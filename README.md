@@ -305,3 +305,28 @@ O Admin continua sendo o gerenciador central de várias lojas. Cada exportação
 
 ### Importante
 Domínio personalizado é configurado na Vercel/DNS; não é necessário criar uma API ou servidor para isso. A `publishableKey` do Supabase continua sendo a única chave permitida no frontend.
+
+
+## V7.1 — estrutura de configuração
+
+O arquivo **`config/loja.js` é obrigatório** e fica na raiz do projeto em `config/loja.js`.
+
+Estrutura mínima:
+
+```text
+index.html
+config/
+  loja.js
+css/
+js/
+assets/
+admin/
+supabase/
+vercel.json
+manifest.webmanifest
+sw.js
+```
+
+No GitHub, confirme com `git status` e `git ls-files config/loja.js`. Se o segundo comando não retornar `config/loja.js`, execute `git add config/loja.js` antes do commit.
+
+Para Vercel, a URL padrão configurada para a loja é `https://{slug}.vercel.app`; se houver domínio próprio, preencha `seo.url` no `config/loja.js`.
