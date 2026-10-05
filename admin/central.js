@@ -35,27 +35,56 @@
   function centralHeader(title,sub){return '<div class="central-header"><div><small>ADMIN GERADOR · CENTRAL</small><h1>'+title+'</h1><p>'+sub+'</p></div><div class="central-head-actions"><select id="central-store" class="inp">'+(C._stores||[]).map(function(l){return '<option value="'+esc(l.id)+'" '+(C.loja&&C.loja.id===l.id?'selected':'')+'>'+esc(l.nome)+' · '+esc(l.slug)+'</option>'}).join('')+'</select><span class="central-live '+(C.realtime?'on':'')+'"><i></i>'+(C.realtime?'Tempo real':'Atualização manual')+'</span><button class="btn fantasma" data-central="logout">Sair</button></div></div>';}
   function metrics(o){var total=o.reduce(function(s,x){return s+(+x.total||0)},0),open=o.filter(function(x){return !['completed','cancelled'].includes(x.status)}).length,done=o.filter(function(x){return x.status==='completed'}).length,customers=uniqueCustomers(o).length;return '<div class="central-metrics"><div><b>'+o.length+'</b><span>Pedidos</span></div><div><b>'+money(total)+'</b><span>Faturamento</span></div><div><b>'+open+'</b><span>Em aberto</span></div><div><b>'+customers+'</b><span>Clientes</span></div></div>';}
   function uniqueCustomers(o){var m={};o.forEach(function(x){var k=(x.customer_phone||x.customer_name||'').trim().toLowerCase();if(k)m[k]=1});return Object.keys(m);}
+  var DEV={running:false,checks:null,lastRun:null};
   function devPage(){
-    var l=C.loja||{};
-    var sb=l.supabase||{};
-    var checks=[
-      ['Configuração da loja',!!l.slug && !!l.nome],
-      ['Supabase configurado',!!sb.enabled && !!sb.url && !!sb.publishableKey],
-      ['Admin Gerador',!!window.APP_FILES],
-      ['Service Worker',('serviceWorker' in navigator)],
-      ['IndexedDB',('indexedDB' in window)],
-      ['PWA manifest',!!document.querySelector('link[rel="manifest"]')]
+    var l=C.loja||{}, sb=l.supabase||{};
+    var checks=DEV.checks||[
+      ['Configuração da loja',!!l.slug && !!l.nome,'Configuração básica válida'],
+      ['Supabase configurado',!!sb.enabled && !!sb.url && !!sb.publishableKey,'URL e chave publishable presentes'],
+      ['Admin Gerador',!!window.APP_FILES,'Arquivos do gerador carregados'],
+      ['Service Worker',('serviceWorker' in navigator),'API disponível neste navegador'],
+      ['IndexedDB',('indexedDB' in window),'Persistência local disponível'],
+      ['PWA manifest',!!document.querySelector('link[rel="manifest"]'),'Manifest conectado'],
+      ['Realtime',!!C.realtime,'Canal de pedidos ativo'],
+      ['Sessão administrativa',!!C.session,'Sessão autenticada'],
+      ['RLS / Pedidos',!!DEV.rlsOk,'Consulta de pedidos autorizada']
     ];
-    var ok=checks.filter(function(x){return x[1]}).length;
-    return centralHeader('🧑‍💻 Área Dev','Diagnóstico técnico e informações do ambiente sem expor chaves privadas.')+
-      '<div class="dev-grid"><div class="dev-card"><small>PROJETO</small><h3>'+esc(l.nome||'—')+'</h3><p>Slug: <code>'+esc(l.slug||'—')+'</code></p><p>Versão do sistema: <b>V8.1</b></p><p>Stack: <b>HTML · CSS · JavaScript · Supabase</b></p></div>'+
-      '<div class="dev-card"><small>SAÚDE</small><h3>'+ok+'/'+checks.length+' verificações OK</h3>'+checks.map(function(x){return '<div class="dev-check '+(x[1]?'ok':'bad')+'"><span>'+ (x[1]?'✓':'!') +'</span><b>'+esc(x[0])+'</b><em>'+(x[1]?'OK':'Atenção')+'</em></div>'}).join('')+'</div>'+
-      '<div class="dev-card"><small>SUPABASE</small><h3>'+ (sb.enabled&&sb.url?'Conectado à configuração':'Não configurado') +'</h3><p>Projeto: <code>'+esc(sb.url?sb.url.replace(/^https?:\/\//,'').split('.')[0]:'—')+'</code></p><p>Chave frontend: <b>Publishable key configurada</b></p><p class="dev-safe">🔒 Nenhuma service_role é exibida ou armazenada no painel.</p></div>'+
-      '<div class="dev-card"><small>DEPLOY</small><h3>Vercel + Netlify</h3><p>Compatibilidade estática preparada para as duas plataformas.</p><div class="dev-deploy"><span>▲ Vercel</span><span>◆ Netlify</span><span>● PWA</span></div></div></div>'+
-      '<div class="dev-actions"><button class="btn primario" data-central="dev-refresh">↻ Executar diagnóstico</button><button class="btn" data-central="dev-copy">Copiar diagnóstico seguro</button></div>';
+    var ok=checks.filter(function(x){return !!x[1]}).length;
+    return centralHeader('🧑‍💻 Área Dev','Diagnóstico técnico completo do ambiente, sem expor segredos.')+
+      '<div class="dev-summary"><div><b>'+ok+'</b><span>OK</span></div><div><b>'+(checks.length-ok)+'</b><span>Atenção</span></div><div><b>'+(DEV.lastRun?date(DEV.lastRun):'—')+'</b><span>Último diagnóstico</span></div></div>'+
+      '<div class="dev-grid">'+
+      '<div class="dev-card"><small>PROJETO</small><h3>'+esc(l.nome||'—')+'</h3><p>Slug: <code>'+esc(l.slug||'—')+'</code></p><p>Versão: <b>V8.2</b></p><p>Stack: <b>HTML · CSS · JavaScript · Supabase</b></p><p>Host atual: <code>'+esc(location.host||'local')+'</code></p></div>'+
+      '<div class="dev-card"><small>SAÚDE DO AMBIENTE</small><h3>'+ok+'/'+checks.length+' verificações OK</h3>'+checks.map(function(x){return '<div class="dev-check '+(x[1]?'ok':'bad')+'"><span>'+ (x[1]?'✓':'!') +'</span><b>'+esc(x[0])+'</b><em>'+(x[1]?'OK':'Atenção')+'</em></div><small class="dev-detail">'+esc(x[2]||'')+'</small>'}).join('')+'</div>'+ 
+      '<div class="dev-card"><small>SUPABASE</small><h3>'+ (sb.enabled&&sb.url?'Configuração encontrada':'Não configurado') +'</h3><p>Projeto: <code>'+esc(sb.url?sb.url.replace(/^https?:\/\//,'').split('.')[0]:'—')+'</code></p><p>Publishable key: <b>'+ (sb.publishableKey?'Configurada':'Ausente') +'</b></p><p>Auth: <b>'+ (C.session?'Sessão ativa':'Sem sessão') +'</b></p><p class="dev-safe">🔒 Nenhuma service_role é exibida, copiada ou armazenada pelo painel.</p></div>'+ 
+      '<div class="dev-card"><small>DEPLOY & PWA</small><h3>Vercel + Netlify</h3><p>Compatibilidade estática preparada para as duas plataformas.</p><div class="dev-deploy"><span>▲ Vercel</span><span>◆ Netlify</span><span>● PWA</span></div><p>Service Worker: <b>'+('serviceWorker' in navigator?'disponível':'indisponível')+'</b></p><p>Online: <b>'+ (navigator.onLine?'Sim':'Não') +'</b></p></div>'+ 
+      '</div><div class="dev-card dev-browser"><small>AMBIENTE</small><div class="dev-env"><span><b>Navegador</b>'+esc(navigator.userAgent||'—')+'</span><span><b>Idioma</b>'+esc(navigator.language||'—')+'</span><span><b>Plataforma</b>'+esc(navigator.platform||'—')+'</span><span><b>Viewport</b>'+innerWidth+' × '+innerHeight+'</span><span><b>Conexão</b>'+ (navigator.onLine?'Online':'Offline')+'</span></div></div>'+ 
+      '<div class="dev-actions"><button class="btn primario" data-central="dev-refresh" '+(DEV.running?'disabled':'')+'>'+(DEV.running?'⏳ Diagnosticando…':'↻ Executar diagnóstico')+'</button><button class="btn" data-central="dev-clear-cache">🧹 Limpar cache</button><button class="btn" data-central="dev-copy">Copiar diagnóstico seguro</button></div>';
+  }
+  async function runDevDiagnostics(){
+    if(DEV.running)return; DEV.running=true; render();
+    var l=C.loja||{},sb=l.supabase||{}; DEV.rlsOk=false;
+    var checks=[
+      ['Configuração da loja',!!l.slug&&!!l.nome,'Configuração básica válida'],
+      ['Supabase configurado',!!sb.enabled&&!!sb.url&&!!sb.publishableKey,'URL e chave publishable presentes'],
+      ['Admin Gerador',!!window.APP_FILES,'Arquivos do gerador carregados'],
+      ['Service Worker',('serviceWorker' in navigator),'API disponível neste navegador'],
+      ['IndexedDB',('indexedDB' in window),'Persistência local disponível'],
+      ['PWA manifest',!!document.querySelector('link[rel="manifest"]'),'Manifest conectado'],
+      ['Realtime',!!C.realtime,'Canal de pedidos ativo'],
+      ['Sessão administrativa',!!C.session,'Sessão autenticada'],
+      ['RLS / Pedidos',false,'Consulta ainda não executada']
+    ];
+    if(C.client&&C.session&&l.slug){
+      try{var r=await C.client.from('orders').select('id',{count:'exact',head:true}).eq('store_slug',l.slug);if(!r.error){DEV.rlsOk=true;checks[8][1]=true;checks[8][2]='Consulta autorizada pela sessão/RLS';}else checks[8][2]='RLS bloqueou ou tabela indisponível';}catch(e){checks[8][2]='Não foi possível consultar o Supabase';}
+    } else checks[8][2]='Entre na Central para testar a política RLS';
+    DEV.checks=checks;DEV.lastRun=Date.now();DEV.running=false;render();toast('Diagnóstico concluído');
+  }
+  async function devClearCache(){
+    try{if('caches' in window){var ks=await caches.keys();await Promise.all(ks.map(function(k){return caches.delete(k)}));}if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){var rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(function(r){return r.unregister()}));}toast('Cache limpo. Recarregue a página para aplicar.');}catch(e){toast('Não foi possível limpar o cache.');}
   }
   function devCopy(){
-    var l=C.loja||{},sb=l.supabase||{},text=['Sistema de Pedidos V8.1','Loja: '+(l.nome||'—'),'Slug: '+(l.slug||'—'),'Supabase: '+(sb.enabled&&sb.url?'configurado':'não configurado'),'Vercel: compatível','Netlify: compatível','Frontend: sem service_role exposta'].join('\n');
+    var l=C.loja||{},sb=l.supabase||{},checks=DEV.checks||[];
+    var text=['Sistema de Pedidos V8.2','Loja: '+(l.nome||'—'),'Slug: '+(l.slug||'—'),'Host: '+location.host,'Supabase: '+(sb.enabled&&sb.url?'configurado':'não configurado'),'Sessão admin: '+(C.session?'ativa':'inativa'),'RLS/Pedidos: '+(DEV.rlsOk?'OK':'não validado'),'Realtime: '+(C.realtime?'ativo':'inativo'),'PWA: '+(document.querySelector('link[rel="manifest"]')?'OK':'ausente'),'Service Worker: '+('serviceWorker' in navigator?'disponível':'indisponível'),'Vercel: compatível','Netlify: compatível','Frontend: sem service_role exposta'].concat(checks.map(function(x){return x[0]+': '+(x[1]?'OK':'Atenção')})).join('\n');
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Diagnóstico seguro copiado');}).catch(function(){toast('Não foi possível copiar');});}else toast('Copie o diagnóstico manualmente.');
   }
   function dashboard(){
@@ -94,7 +123,7 @@
   document.addEventListener('click',function(e){var b=e.target.closest('[data-central]');if(!b)return;var a=b.dataset.central;
     if(a==='dashboard'||a==='pedidos'||a==='clientes'||a==='dev'){goPage(a);return}
     if(a==='period'){C.period=b.dataset.period||'all';render();return}
-    if(a==='refresh'){load();return}if(a==='dev-refresh'){render();toast('Diagnóstico atualizado');return}if(a==='dev-copy'){devCopy();return}
+    if(a==='refresh'){load();return}if(a==='dev-refresh'){runDevDiagnostics();return}if(a==='dev-clear-cache'){devClearCache();return}if(a==='dev-copy'){devCopy();return}
     if(a==='export-csv'){exportCSV();return}
     if(a==='fechar-login'){var x=document.getElementById('central-login');if(x)x.remove();return}
     if(a==='login'){login();return}if(a==='signup'){signup();return}if(a==='show-signup'){showAuthModal('signup');return}if(a==='show-login'){showAuthModal('login');return}if(a==='toggle-password'){togglePassword();return}if(a==='reset-password'){resetPassword();return}

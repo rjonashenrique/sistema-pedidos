@@ -396,6 +396,11 @@ A Central continua sem `service_role` no navegador. O acesso depende de Supabase
 - atualização manual da conta e logout seguro.
 
 
-## V8.1 — Área Dev
+## V8.2 — Área Dev
 
 A Central recebeu uma área **🧑‍💻 Dev** para diagnóstico seguro do ambiente. Ela mostra versão, configuração da loja, estado do Supabase, PWA, IndexedDB e compatibilidade de deploy sem exibir chaves privadas ou `service_role`. Também permite copiar um diagnóstico sanitizado para suporte técnico.
+
+
+## Área Dev V8.2
+
+A Central inclui diagnóstico técnico protegido por login administrativo, teste de RLS/Supabase, Realtime, PWA, Service Worker, IndexedDB, ambiente do navegador, limpeza de cache e cópia de relatório técnico sem chaves privadas. A `service_role` nunca é exibida no painel.
