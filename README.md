@@ -368,3 +368,11 @@ A Central do Admin Gerador foi atualizada com:
 - Multi-lojas com troca de loja no próprio painel.
 
 A Central continua sem `service_role` no navegador. O acesso depende de Supabase Auth + `public.store_admins` + políticas RLS.
+
+## Área do Cliente — conta atualizada
+- edição de nome, WhatsApp e e-mail;
+- troca de senha;
+- confirmação de e-mail quando o Supabase exigir;
+- máscara de WhatsApp no formulário;
+- resumo de pedidos, gastos e endereços;
+- atualização manual da conta e logout seguro.

@@ -56,6 +56,14 @@
     if (r.error) throw r.error;
     return Object.assign({ id: u.id, email: u.email || '' }, r.data || {});
   }
+  async function updateEmail(email) {
+    if (!client) throw new Error('Supabase ainda não foi configurado para esta loja.');
+    var value = String(email || '').trim().toLowerCase();
+    if (!value) throw new Error('Informe um e-mail válido.');
+    var r = await client.auth.updateUser({ email: value });
+    if (r.error) throw r.error;
+    return r.data && r.data.user ? r.data.user : null;
+  }
   async function updateProfile(values) {
     var u = await user();
     if (!u || !client) throw new Error('Você precisa entrar na sua conta.');
@@ -156,5 +164,5 @@
     var sub = client.auth.onAuthStateChange(function (event, sessionValue) { callback(event, sessionValue); });
     return function () { if (sub.data && sub.data.subscription) sub.data.subscription.unsubscribe(); };
   }
-  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, updatePassword: updatePassword, addresses: addresses, saveAddress: saveAddress, deleteAddress: deleteAddress, setDefaultAddress: setDefaultAddress, orders: orders, orderItems: orderItems, createOrder: createOrder, subscribeOrder: subscribeOrder, onAuth: onAuth };
+  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, updateEmail: updateEmail, updatePassword: updatePassword, addresses: addresses, saveAddress: saveAddress, deleteAddress: deleteAddress, setDefaultAddress: setDefaultAddress, orders: orders, orderItems: orderItems, createOrder: createOrder, subscribeOrder: subscribeOrder, onAuth: onAuth };
 })();

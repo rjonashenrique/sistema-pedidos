@@ -465,10 +465,12 @@
       h += S.accountAddresses.length ? S.accountAddresses.map(function(a){ return '<div class="cliente-address-card"><div><b>'+esc(a.label || 'Endereço')+(a.is_default?' <em>Principal</em>':'')+'</b><p>'+esc(a.address_line)+'</p></div><div class="cliente-address-actions">'+(!a.is_default?'<button data-a="defaultAddress" data-v="'+esc(a.id)+'">Principal</button>':'')+'<button data-a="useAddress" data-v="'+esc(a.id)+'">Usar</button><button data-a="deleteAddress" data-v="'+esc(a.id)+'" class="danger">Excluir</button></div></div>'; }).join('') : '<div class="cliente-empty">Nenhum endereço salvo.</div>';
       h += '<form data-form="address" class="cliente-address-form"><input name="label" placeholder="Nome do endereço (ex.: Casa)"><input name="address_line" required placeholder="Rua, número, bairro, complemento"><label><input type="checkbox" name="is_default"> Usar como endereço principal</label><button class="cliente-primary-btn">Salvar endereço</button></form>';
     } else {
-      h += '<div class="cliente-profile-box"><div class="cliente-avatar">'+esc((d.full_name || d.email || '?').slice(0,1).toUpperCase())+'</div><div><b>'+esc(d.full_name || 'Cliente')+'</b><small>'+esc(d.email || '')+'</small></div></div>';
-      h += '<form data-form="profile" class="cliente-account-form"><label>Nome completo<input name="full_name" value="'+esc(d.full_name || '')+'" autocomplete="name"></label><label>WhatsApp<input name="phone" value="'+esc(d.phone || '')+'" autocomplete="tel"></label><button'+disabled+' class="cliente-primary-btn">Salvar dados</button></form>';
-      h += '<div class="cliente-security"><b>Segurança</b><small>Atualize sua senha sempre que quiser.</small><form data-form="password" class="cliente-account-form"><input name="password" type="password" minlength="6" required autocomplete="new-password" placeholder="Nova senha"><input name="password2" type="password" minlength="6" required autocomplete="new-password" placeholder="Confirmar nova senha"><button'+disabled+' class="cliente-secondary-btn">Atualizar senha</button></form></div>';
-      h += '<div class="cliente-account-actions"><button data-a="accountLogout" class="sair">Sair da conta</button></div>';
+      var initials = (d.full_name || d.email || '?').trim().slice(0,1).toUpperCase();
+      h += '<div class="cliente-profile-box"><div class="cliente-avatar">'+esc(initials)+'</div><div style="min-width:0;flex:1"><b>'+esc(d.full_name || 'Cliente')+'</b><small>'+esc(d.email || '')+'</small><small class="cliente-account-status">Conta ativa · dados protegidos</small></div></div>';
+      h += '<div class="cliente-section-title"><b>Dados da conta</b><span>Atualize quando quiser</span></div>';
+      h += '<form data-form="profile" class="cliente-account-form"><label>Nome completo<input name="full_name" value="'+esc(d.full_name || '')+'" autocomplete="name" maxlength="120"></label><label>WhatsApp<input name="phone" value="'+esc(d.phone || '')+'" autocomplete="tel" inputmode="tel" maxlength="15" placeholder="(00) 00000-0000"></label><label>E-mail<input name="email" type="email" value="'+esc(d.email || '')+'" autocomplete="email" maxlength="160"></label><small class="cliente-form-hint">Ao trocar o e-mail, o Supabase pode solicitar uma confirmação no novo endereço.</small><button'+disabled+' class="cliente-primary-btn">Salvar dados da conta</button></form>';
+      h += '<div class="cliente-security"><b>Segurança</b><small>Troque sua senha sempre que precisar. Use pelo menos 6 caracteres.</small><form data-form="password" class="cliente-account-form"><input name="password" type="password" minlength="6" required autocomplete="new-password" placeholder="Nova senha"><input name="password2" type="password" minlength="6" required autocomplete="new-password" placeholder="Confirmar nova senha"><button'+disabled+' class="cliente-secondary-btn">Atualizar senha</button></form></div>';
+      h += '<div class="cliente-account-actions"><button data-a="accountRefresh">Atualizar dados</button><button data-a="accountLogout" class="sair">Sair da conta</button></div>';
     }
     h += '<div data-k="accountError" class="cliente-account-error"></div></div></div>';
     return h;
@@ -977,6 +979,10 @@
       var m = mascaraReais(v);
       if (m !== v) { el.value = m; try { el.setSelectionRange(m.length, m.length); } catch (x) {} }
       setForm('troco', m);
+    } else if (k === 'phone') {
+      var digits = v.replace(/\D/g, '').slice(0, 11);
+      var tel = digits.length <= 10 ? digits.replace(/(\d{2})(\d{4})(\d{0,4})/, function(_,a,b,c){ return '('+a+') '+b+(c ? '-'+c : ''); }) : digits.replace(/(\d{2})(\d{5})(\d{0,4})/, function(_,a,b,c){ return '('+a+') '+b+(c ? '-'+c : ''); });
+      el.value = tel; setForm(k, tel);
     } else setForm(k, v);
   });
   root.addEventListener('submit', async function (e) {
@@ -1000,8 +1006,13 @@
         await AppSupabase.saveAddress({ label: String(fd.get('label')).trim() || 'Principal', address_line: String(fd.get('address_line')).trim(), is_default: !!fd.get('is_default') });
         await carregarConta(); set({ accountLoading: false }); flash('Endereço salvo.');
       } else if (kind === 'profile') {
+        var newEmail = String(fd.get('email') || '').trim().toLowerCase();
+        var currentEmail = String((S.accountData && S.accountData.email) || '').trim().toLowerCase();
         var pr = await AppSupabase.updateProfile({ full_name: String(fd.get('full_name')).trim(), phone: String(fd.get('phone')).trim() });
-        set({ accountData: pr, accountLoading: false }); flash('Dados atualizados.');
+        var emailChanged = newEmail && newEmail !== currentEmail;
+        if (emailChanged) await AppSupabase.updateEmail(newEmail);
+        set({ accountData: Object.assign({}, pr, { email: emailChanged ? newEmail : currentEmail }), accountLoading: false });
+        flash(emailChanged ? 'Dados atualizados. Confirme o novo e-mail se solicitado.' : 'Dados da conta atualizados.');
       } else if (kind === 'password') {
         var np = String(fd.get('password')), np2 = String(fd.get('password2'));
         if (np.length < 6) throw new Error('A nova senha precisa ter pelo menos 6 caracteres.');
