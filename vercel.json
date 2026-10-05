@@ -1,4 +1,19 @@
 {
-  "buildCommand": "node scripts/meta.js",
-  "outputDirectory": "."
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin/admin.html" }
+  ],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json" }
+      ]
+    }
+  ]
 }

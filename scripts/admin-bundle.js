@@ -10,7 +10,7 @@ const ler = f => fs.readFileSync(path.join(raiz, f), 'utf8');
 const index = ler('index.html').replace(
   /(<!-- META:INICIO[^>]*-->)[\s\S]*?(\s*<!-- META:FIM -->)/, '$1$2');   // o admin grava as tags de cada loja
 
-const arquivos = { 'index.html': index, 'css/app.css': ler('css/app.css'), 'js/app.js': ler('js/app.js'), 'js/supabase.js': ler('js/supabase.js') };
+const arquivos = { 'index.html': index, 'css/app.css': ler('css/app.css'), 'js/app.js': ler('js/app.js'), 'js/supabase.js': ler('js/supabase.js'), 'manifest.webmanifest': ler('manifest.webmanifest'), 'sw.js': ler('sw.js'), 'vercel.json': ler('vercel.json') };
 const saida = '// Gerado por scripts/admin-bundle.js em ' + new Date().toLocaleString('pt-BR') + ' — não edite à mão.\n' +
   'window.APP_FILES = ' + JSON.stringify(arquivos) + ';\n' +
   'window.APP_FILES_DATA = ' + JSON.stringify(new Date().toISOString()) + ';\n';

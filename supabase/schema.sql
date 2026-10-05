@@ -189,3 +189,39 @@ using (
 );
 
 -- Recomendação: depois de aplicar a alteração, rode os Security Advisors.
+
+-- V3: integridade, auditoria e atualização automática
+alter table public.orders drop constraint if exists orders_status_check;
+alter table public.orders add constraint orders_status_check check (status in (
+  'whatsapp_pending','received','confirmed','preparing','ready','out_for_delivery','completed','cancelled'
+));
+alter table public.orders drop constraint if exists orders_total_nonnegative;
+alter table public.orders add constraint orders_total_nonnegative check (subtotal >= 0 and delivery_fee >= 0 and discount >= 0 and total >= 0);
+alter table public.order_items drop constraint if exists order_items_money_nonnegative;
+alter table public.order_items add constraint order_items_money_nonnegative check (unit_price >= 0 and line_total >= 0);
+
+create or replace function public.touch_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_touch_updated_at on public.orders;
+create trigger orders_touch_updated_at before update on public.orders
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists profiles_touch_updated_at on public.profiles;
+create trigger profiles_touch_updated_at before update on public.profiles
+for each row execute function public.touch_updated_at();
+
+revoke all on function public.touch_updated_at() from public, anon, authenticated;
+
+-- Realtime somente para a operação de pedidos.
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='orders') then
+    alter publication supabase_realtime add table public.orders;
+  end if;
+end $$;

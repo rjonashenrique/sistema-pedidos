@@ -939,7 +939,7 @@
       (v.erros.length ? '<div class="dica erro">Erros bloqueiam a exportação. Avisos só alertam.</div>' : '') + '</div>' +
       '<div class="cartao"><h3>Exportar site</h3>' +
       (semLibs ? '<div class="faixa erro">Sem internet: não consegui carregar as bibliotecas de ZIP e QR Code (cdnjs). Conecte e recarregue a página.</div>' : '') +
-      '<div class="dica">Gera <b>' + esc(l.slug) + '.zip</b> com index.html, css, js, config/loja.js e as imagens usadas. As meta tags saem gravadas com o endereço <b>' + esc(url) + '</b>.</div>' +
+      '<div class="dica">Gera <b>' + esc(l.slug) + '.zip</b> com index.html, CSS, JS, PWA, config/loja.js e as imagens usadas. As meta tags saem gravadas com o endereço <b>' + esc(url) + '</b>.</div>' +
       '<div><button class="btn primario grande" data-act="exportarSite"' + (v.erros.length || semLibs ? ' disabled' : '') + '>' + IC.baixar + 'Exportar site</button></div>' +
       (exp ? '<div class="faixa ok">Exportado: ' + esc(l.slug) + '.zip (' + A.exportado.arquivos + ' arquivos, ' + A.exportado.kb + ' KB).</div>' +
         '<h3 style="margin-top:4px">Como publicar</h3><ol class="passos">' +
@@ -985,10 +985,14 @@
     pasta.file('css/app.css', f['css/app.css']);
     pasta.file('js/app.js', f['js/app.js']);
     pasta.file('js/supabase.js', f['js/supabase.js']);
+    var manifest = f['manifest.webmanifest'].replace(/__NOME__/g, String(cfg.nome || 'Pedidos')).replace(/__COR__/g, String((cfg.cores || {}).principal || '#E8590C'));
+    pasta.file('manifest.webmanifest', manifest);
+    pasta.file('sw.js', f['sw.js']);
+    pasta.file('vercel.json', f['vercel.json']);
     pasta.file('config/loja.js', gerarLojaJs(cfg));
     col.arquivos.forEach(function (a) { pasta.file(a.caminho, a.dados.slice(a.dados.indexOf(',') + 1), { base64: true }); });
     var blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-    return { blob: blob, total: 5 + col.arquivos.length };
+    return { blob: blob, total: 8 + col.arquivos.length };
   }
   async function exportarSite() {
     var l = A.loja;

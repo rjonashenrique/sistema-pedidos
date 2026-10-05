@@ -88,6 +88,9 @@
     var u = await user();
     if (!u || !client) return null;
     var orderNumber = String(Date.now()).slice(-8);
+    var pr = await profile();
+    var couponCode = null;
+    if (c.cp && window.LOJA.cupons) { Object.keys(window.LOJA.cupons).some(function (k) { if (window.LOJA.cupons[k] && window.LOJA.cupons[k].tipo === c.cp.tipo && +window.LOJA.cupons[k].valor === +c.cp.valor) { couponCode = k; return true; } return false; }); }
     var payload = {
       user_id: u.id,
       store_slug: store.slug || null,
@@ -95,14 +98,14 @@
       status: 'whatsapp_pending',
       order_type: c.entrega ? 'delivery' : 'pickup',
       customer_name: c.f.nome.trim(),
-      customer_phone: '',
+      customer_phone: (c.f && c.f.telefone ? c.f.telefone : (pr && pr.phone ? pr.phone : '')),
       delivery_address: c.entrega ? c.f.endereco.trim() : null,
       payment_method: c.f.pagamento,
       subtotal: c.subtotal,
       delivery_fee: c.taxa,
       discount: c.desconto,
       total: c.total,
-      coupon_code: c.cp ? (window.LOJA.cupons && Object.keys(window.LOJA.cupons).find(function (k) { return window.LOJA.cupons[k] === c.cp; })) || null : null,
+      coupon_code: couponCode,
       notes: c.f.obs.trim() || null,
       scheduled_for: c.st.aberto ? null : new Date().toISOString()
     };
@@ -115,10 +118,18 @@
     if (ir.error) throw ir.error;
     return r.data;
   }
+  function subscribeOrder(orderId, callback) {
+    if (!client || !orderId) return function () {};
+    var channel = client.channel('cliente-pedido-' + orderId)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + orderId }, function (payload) {
+        if (callback) callback(payload.new);
+      }).subscribe();
+    return function () { try { client.removeChannel(channel); } catch (e) {} };
+  }
   function onAuth(callback) {
     if (!client) return function () {};
     var sub = client.auth.onAuthStateChange(function (event, sessionValue) { callback(event, sessionValue); });
     return function () { if (sub.data && sub.data.subscription) sub.data.subscription.unsubscribe(); };
   }
-  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, addresses: addresses, saveAddress: saveAddress, orders: orders, createOrder: createOrder, onAuth: onAuth };
+  window.AppSupabase = { pronto: pronto, getClient: getClient, session: session, user: user, signIn: signIn, signUp: signUp, reset: reset, signOut: signOut, profile: profile, updateProfile: updateProfile, addresses: addresses, saveAddress: saveAddress, orders: orders, createOrder: createOrder, subscribeOrder: subscribeOrder, onAuth: onAuth };
 })();
