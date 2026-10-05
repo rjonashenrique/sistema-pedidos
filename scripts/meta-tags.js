@@ -6,7 +6,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-  // Endereço do site: seo.url ou, se vazio, o urlPadrao com o slug (ex.: https://brasa-burger.netlify.app/)
+  // Endereço do site: seo.url ou, se vazio, o urlPadrao com o slug (ex.: https://brasa-burger.vercel.app/)
   function urlDoSite(L) {
     var seo = L.seo || {};
     var url = seo.url || (L.urlPadrao && L.slug ? L.urlPadrao.replace('{slug}', L.slug) : '');

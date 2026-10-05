@@ -1,3 +1,17 @@
 [build]
-  command = "node scripts/meta.js"
   publish = "."
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/admin.html"
+  status = 200
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

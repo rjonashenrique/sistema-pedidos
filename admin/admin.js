@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var URL_PADRAO = 'https://{slug}.netlify.app';
+  var URL_PADRAO = 'https://{slug}.vercel.app';
   var DIAS = [['seg', 'Segunda'], ['ter', 'Terça'], ['qua', 'Quarta'], ['qui', 'Quinta'], ['sex', 'Sexta'], ['sab', 'Sábado'], ['dom', 'Domingo']];
   var PAGAMENTOS = ['Pix', 'Dinheiro', 'Crédito', 'Débito'];
   var SECOES = [
@@ -57,8 +57,8 @@
     return '';
   }
   function urlLoja(l) { return MetaTags.urlDoSite({ slug: l.slug, urlPadrao: l.urlPadrao || URL_PADRAO, seo: { url: l.urlSite } }); }
-  function nomeNetlify(url) {
-    try { var h = new URL(url).hostname; return /\.netlify\.app$/.test(h) ? h.replace(/\.netlify\.app$/, '') : ''; } catch (e) { return ''; }
+  function nomeVercel(url) {
+    try { var h = new URL(url).hostname; return /\.vercel\.app$/.test(h) ? h.replace(/\.vercel\.app$/, '') : ''; } catch (e) { return ''; }
   }
   function urlValida(u) { try { var x = new URL(u); return /^https?:$/.test(x.protocol) && x.hostname.indexOf('.') > 0; } catch (e) { return false; } }
   function baixar(dados, nome) {
@@ -621,10 +621,10 @@
       if ((v === '' || v == null) && el.dataset.alt) v = getPath(l, el.dataset.alt);
       el.textContent = el.dataset.fmt === 'money' ? M(v) : (v || el.dataset.vazio || '');
     });
-    var url = urlLoja(l), nn = nomeNetlify(url);
+    var url = urlLoja(l), nn = nomeVercel(url);
     q('[data-link]').forEach(function (el) { el.textContent = url; });
     q('[data-dominio]').forEach(function (el) { try { el.textContent = new URL(url).hostname; } catch (e) { el.textContent = ''; } });
-    q('[data-netlify]').forEach(function (el) { el.textContent = nn || '(domínio próprio)'; });
+    q('[data-vercel]').forEach(function (el) { el.textContent = nn || '(domínio próprio)'; });
     q('[data-wa]').forEach(function (el) {
       var e = erroWhats(l.whatsapp);
       el.className = 'dica ' + (e ? 'erro' : 'ok');
@@ -735,10 +735,10 @@
     return { sub: 'Endereço onde o cardápio vai ficar no ar.', html:
       '<div class="cartao"><div class="campo"><span class="rotulo">Endereço do site</span><div style="font-size:20px;font-weight:700;word-break:break-all" data-link></div>' +
       '<div class="dica">Gerado a partir do nome do link (<b data-espelho="slug"></b>) e do modelo <code>' + esc(l.urlPadrao || URL_PADRAO) + '</code>.</div></div>' +
-      '<div class="linha"><span class="rotulo">Nome do site no Netlify:</span><code data-netlify></code><button class="btn pequeno" data-act="copiarNetlify">' + IC.copiar + 'Copiar</button></div></div>' +
+      '<div class="linha"><span class="rotulo">Nome do site no Vercel:</span><code data-vercel></code><button class="btn pequeno" data-act="copiarVercel">' + IC.copiar + 'Copiar</button></div></div>' +
       '<div class="cartao"><h3>Usar outro endereço</h3>' +
       campo('', inp('urlSite', { ph: MetaTags.urlDoSite({ slug: l.slug, urlPadrao: l.urlPadrao || URL_PADRAO }).replace(/\/$/, ''), type: 'url' }),
-        'Deixe vazio para usar o endereço acima. Preencha se o nome estiver ocupado no Netlify (ex.: <code>https://' + esc(l.slug) + '-sp.netlify.app</code>) ou se a loja tiver domínio próprio.') +
+        'Deixe vazio para usar o endereço acima. Preencha se o nome estiver ocupado no Vercel (ex.: <code>https://' + esc(l.slug) + '-sp.vercel.app</code>) ou se a loja tiver domínio próprio.') +
       '</div>' };
   };
   SEC.aparencia = function (l) {
@@ -926,13 +926,13 @@
       '<div class="link" data-link></div></div><div class="dica">Aproximação. Depois de publicar, confira em developers.facebook.com/tools/debug.</div></div>' };
   };
   SEC.exportar = function (l) {
-    var v = validar(l), url = urlLoja(l), nn = nomeNetlify(url), exp = A.exportado && A.exportado.id === l.id;
+    var v = validar(l), url = urlLoja(l), nn = nomeVercel(url), exp = A.exportado && A.exportado.id === l.id;
     var item = function (e, tipo) {
       return '<div class="it"><span class="selo ' + tipo + '">' + (tipo === 'erro' ? 'Erro' : 'Aviso') + '</span><span class="t">' + esc(e.msg) + '</span>' +
         '<button class="btn pequeno fantasma" data-act="secao" data-v="' + e.secao + '">Corrigir</button></div>';
     };
     var semLibs = !window.JSZip || !window.QRious;
-    return { sub: 'Confira o checklist, exporte o ZIP e publique no Netlify Drop.', html:
+    return { sub: 'Confira o checklist, exporte o ZIP e publique no Vercel ou Netlify Drop.', html:
       '<div class="cartao"><h3>Checklist</h3>' +
       (!v.erros.length && !v.avisos.length ? '<div class="faixa ok">Tudo certo. Pode exportar.</div>'
         : '<div class="check">' + v.erros.map(function (e) { return item(e, 'erro'); }).join('') + v.avisos.map(function (e) { return item(e, 'aviso'); }).join('') + '</div>') +
@@ -944,11 +944,11 @@
       (exp ? '<div class="faixa ok">Exportado: ' + esc(l.slug) + '.zip (' + A.exportado.arquivos + ' arquivos, ' + A.exportado.kb + ' KB).</div>' +
         '<h3 style="margin-top:4px">Como publicar</h3><ol class="passos">' +
         '<li><span>Descompacte <b>' + esc(l.slug) + '.zip</b>. Vai aparecer a pasta <b>' + esc(l.slug) + '</b>.</span></li>' +
-        '<li><span>Abra <b>app.netlify.com/drop</b> (com login) e arraste a pasta <b>' + esc(l.slug) + '</b>.</span></li>' +
-        (nn ? '<li><span>Em <b>Site configuration → Change site name</b>, use exatamente: <code>' + esc(nn) + '</code> <button class="btn pequeno" data-act="copiarNetlify">' + IC.copiar + 'Copiar</button><br>O site fica em <b>' + esc(url) + '</b>. Se o nome estiver ocupado, escolha outro na seção <a href="#" data-act="secao" data-v="link">Link</a> e exporte de novo.</span></li>'
+        '<li><span>Publique em <b>Vercel</b> (Vercel Drop) ou <b>Netlify</b> (Netlify Drop) e arraste a pasta <b>' + esc(l.slug) + '</b>.</span></li>' +
+        (nn ? '<li><span>Em <b>Site configuration → Change site name</b>, use exatamente: <code>' + esc(nn) + '</code> <button class="btn pequeno" data-act="copiarVercel">' + IC.copiar + 'Copiar</button><br>O site fica em <b>' + esc(url) + '</b>. Se o nome estiver ocupado, escolha outro na seção <a href="#" data-act="secao" data-v="link">Link</a> e exporte de novo.</span></li>'
           : '<li><span>Em <b>Domain management</b>, conecte o domínio <b>' + esc(url) + '</b>.</span></li>') +
         '<li><span>Teste a prévia: cole o link em <b>developers.facebook.com/tools/debug</b> e clique em <b>Scrape Again</b>. Depois mande o link numa conversa do WhatsApp.</span></li>' +
-        '<li><span>Para atualizar depois: exporte de novo e, no Netlify, aba <b>Deploys</b>, arraste a pasta nova.</span></li></ol>' : '') + '</div>' +
+        '<li><span>Para atualizar depois: exporte de novo e, no Vercel, aba <b>Deploys</b>, arraste a pasta nova.</span></li></ol>' : '') + '</div>' +
       '<div class="cartao"><h3>QR Code</h3><div class="qr-box"><canvas id="qr" width="320" height="320"></canvas><div class="campo">' +
       '<div class="dica">Aponta para <b data-link></b><br>Para balcão, embalagem e Instagram. Confira se é o endereço final antes de imprimir.</div>' +
       '<div><button class="btn" data-act="baixarQR"' + (semLibs ? ' disabled' : '') + '>' + IC.baixar + 'Baixar QR Code (PNG)</button></div></div></div></div>',
@@ -989,6 +989,7 @@
     pasta.file('manifest.webmanifest', manifest);
     pasta.file('sw.js', f['sw.js']);
     pasta.file('vercel.json', f['vercel.json']);
+    if (f['netlify.toml']) pasta.file('netlify.toml', f['netlify.toml']);
     pasta.file('config/loja.js', gerarLojaJs(cfg));
     col.arquivos.forEach(function (a) { pasta.file(a.caminho, a.dados.slice(a.dados.indexOf(',') + 1), { base64: true }); });
     var blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
@@ -1155,8 +1156,8 @@
       A.loja.seo.imagem = await processar(A.loja.banner.imagem || A.loja.logo, IMG.compartilhar);
       mudou(true);
     },
-    copiarNetlify: function () {
-      var t = nomeNetlify(urlLoja(A.loja)) || urlLoja(A.loja);
+    copiarVercel: function () {
+      var t = nomeVercel(urlLoja(A.loja)) || urlLoja(A.loja);
       (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast('Copiado: ' + t); }, function () { toast(t); });
     },
     copiarHorario: function () {

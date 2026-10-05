@@ -200,13 +200,10 @@ Também existem:
 4. Configure produtos, horários, pagamentos, SEO e Supabase.
 5. Corrija as pendências da validação.
 6. Use **Exportar ZIP**.
-7. Publique o ZIP/pasta gerado no Netlify, Vercel ou outro host estático.
+7. Publique o ZIP/pasta gerado no Vercel ou outro host estático.
 
 O ZIP do cliente não inclui o painel administrativo, `design/`, SQL ou ferramentas internas.
 
-## Publicação no Netlify
-
-O `netlify.toml` já está preparado para publicação estática. A pasta publicada precisa conter `index.html` na raiz.
 
 ## Segurança
 
@@ -259,13 +256,6 @@ Quando o cliente está autenticado e o pedido foi salvo no Supabase, a tela de p
 
 Para retirada, a etapa de entrega não é exibida. Cancelamentos aparecem como estado final.
 
-### Publicação Netlify
-O `index.html` está na raiz do projeto. Para deploy manual, envie **o conteúdo desta pasta**, não uma pasta pai adicional. Como é um site estático, não há build command.
-
-- Publish directory: `.`
-- Build command: vazio
-- Página cliente: `/`
-- Painel: `/admin/admin.html`
 
 ## V6 — Cliente Pro
 
@@ -330,3 +320,24 @@ sw.js
 No GitHub, confirme com `git status` e `git ls-files config/loja.js`. Se o segundo comando não retornar `config/loja.js`, execute `git add config/loja.js` antes do commit.
 
 Para Vercel, a URL padrão configurada para a loja é `https://{slug}.vercel.app`; se houver domínio próprio, preencha `seo.url` no `config/loja.js`.
+
+## V7.3 — Vercel + Netlify (sem marca d’água)
+
+Esta versão é compatível com **Vercel e Netlify**. As duas plataformas são apenas opções de hospedagem: o cliente final não recebe badge, marca d’água ou branding visual de nenhuma delas.
+
+### Vercel
+- `vercel.json` incluído.
+- `/admin` direciona para `/admin/admin.html`.
+- PWA e Service Worker com cache-control adequado.
+
+### Netlify
+- `netlify.toml` incluído.
+- Publicação estática com `publish = "."`.
+- `/admin` direciona para `/admin/admin.html`.
+- Service Worker sem cache e manifest com MIME correto.
+
+### Exportação por loja
+O Admin Gerador inclui no ZIP da loja: `config/loja.js`, `vercel.json` e `netlify.toml`, além dos arquivos do cliente. Assim, o mesmo ZIP pode ser publicado em qualquer uma das duas plataformas sem editar o código.
+
+### Branding
+Não existe badge, rodapé, watermark ou anúncio de Vercel/Netlify no frontend. O domínio mostrado ao cliente é definido pelo campo `seo.url`/URL da loja.
