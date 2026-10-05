@@ -423,3 +423,12 @@ O Admin Gerador agora suporta criação profissional por segmento, sem limitar o
 Cada preset cria uma base de categorias, produtos/serviços, identidade visual, banner e SEO. O administrador pode editar tudo depois. Contatos, domínio e configurações técnicas são preservados ao trocar de nicho.
 
 O campo de modelo permite trabalhar com **Catálogo / pedidos** ou **Serviços / agendamento**. A arquitetura continua estática, sem servidor no gerador, com dados locais em IndexedDB e exportação independente por loja.
+
+
+## V8.5 — Correção Supabase / GoTrue
+- A Central agora reutiliza a mesma instância do Supabase por loja/storageKey.
+- Evita criação duplicada de `GoTrueClient` ao inicializar e trocar de loja.
+- A troca de loja encerra o canal Realtime anterior antes de abrir o próximo.
+- O bootstrap inicial não cria mais um cliente Supabase antes de `selectStore()`.
+- O cache de clientes é separado por `slug + URL + publishableKey`, preservando o suporte multi-lojas sem duplicar instâncias da mesma configuração.
+- Nenhuma `service_role` é utilizada no navegador.

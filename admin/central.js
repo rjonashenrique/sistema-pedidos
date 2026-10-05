@@ -5,7 +5,11 @@
   var root = document.getElementById('raiz');
   if (!root) return;
   var DB_NAME = 'admin-gerador', STORE = 'lojas';
-  var C = { page:'dashboard', loja:null, session:null, client:null, orders:[], loading:false, busca:'', status:'all', period:'all', detalhe:null, detalheItens:[], realtime:null, autoRefresh:null, _stores:[] };
+  var C = { page:'dashboard', loja:null, session:null, client:null, orders:[], loading:false, busca:'', status:'all', period:'all', detalhe:null, detalheItens:[], realtime:null, autoRefresh:null, _stores:[], clientKey:null };
+  // V8.5 — mantém uma única instância GoTrue por storageKey/loja.
+  // Criar createClient repetidamente no mesmo contexto dispara o aviso
+  // 'Multiple GoTrueClient instances detected'.
+  var CLIENT_CACHE = new Map();
   var STATUSES = [
     ['all','Todos'],['whatsapp_pending','Aguardando WhatsApp'],['received','Recebido'],['confirmed','Confirmado'],
     ['preparing','Em preparo'],['ready','Pronto'],['out_for_delivery','Saiu para entrega'],['completed','Concluído'],['cancelled','Cancelado']
@@ -17,7 +21,20 @@
   function dayKey(v){var d=new Date(v);return isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function idb(){return new Promise(function(ok,err){var r=indexedDB.open(DB_NAME,1);r.onsuccess=function(){ok(r.result)};r.onerror=function(){err(r.error)}})}
   function stores(){return idb().then(function(db){return new Promise(function(ok,err){var q=db.transaction(STORE,'readonly').objectStore(STORE).getAll();q.onsuccess=function(){ok(q.result||[])};q.onerror=function(){err(q.error)}})}).then(function(a){return a.sort(function(x,y){return (x.nome||'').localeCompare(y.nome||'')})})}
-  function clientFor(l){if(!window.supabase||!window.supabase.createClient)return null;if(!l||!l.supabase||!l.supabase.enabled||!l.supabase.url||!l.supabase.publishableKey)return null;return window.supabase.createClient(l.supabase.url,l.supabase.publishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'admin-central-'+(l.slug||'loja')}})}
+  function clientFor(l){
+    if(!window.supabase||!window.supabase.createClient)return null;
+    if(!l||!l.supabase||!l.supabase.enabled||!l.supabase.url||!l.supabase.publishableKey)return null;
+    var slug=l.slug||'loja';
+    var storageKey='admin-central-'+slug;
+    var key=storageKey+'|'+l.supabase.url+'|'+l.supabase.publishableKey;
+    var cached=CLIENT_CACHE.get(key);
+    if(cached)return cached;
+    var client=window.supabase.createClient(l.supabase.url,l.supabase.publishableKey,{
+      auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:storageKey}
+    });
+    CLIENT_CACHE.set(key,client);
+    return client;
+  }
   function toast(t){var e=document.querySelector('.toast');if(!e){e=document.createElement('div');e.className='toast';document.body.appendChild(e)}e.textContent=t;clearTimeout(window.__centralToast);window.__centralToast=setTimeout(function(){e.remove()},3000)}
   function filteredPeriod(list){var now=Date.now(),ms=C.period==='today'?86400000:C.period==='7d'?7*86400000:C.period==='30d'?30*86400000:0;if(!ms)return list;return list.filter(function(o){var t=new Date(o.created_at).getTime();return t>=now-ms});}
   function activeOrders(){return filteredPeriod(C.orders||[]);}
@@ -104,7 +121,19 @@
   function pageCustomers(){var a=customers(),q=(C.busca||'').toLowerCase();if(q)a=a.filter(function(c){return (c.name+' '+c.phone).toLowerCase().includes(q)});return centralHeader('👥 Clientes','Base de clientes formada pelos pedidos da loja.')+'<div class="central-toolbar"><input id="central-search" class="inp" placeholder="Buscar cliente ou telefone…" value="'+esc(C.busca)+'"><select id="central-period" class="inp">'+PERIODS.map(function(p){return '<option value="'+p[0]+'" '+(C.period===p[0]?'selected':'')+'>'+p[1]+'</option>'}).join('')+'</select><button class="btn" data-central="refresh">↻ Atualizar</button><button class="btn" data-central="export-csv">⬇ CSV</button></div><div class="central-metrics"><div><b>'+a.length+'</b><span>Clientes</span></div><div><b>'+money(a.reduce(function(s,c){return s+c.total},0))+'</b><span>Faturamento</span></div><div><b>'+((a.reduce(function(s,c){return s+c.orders},0)/Math.max(a.length,1)).toFixed(1))+'</b><span>Pedidos por cliente</span></div><div><b>'+money(a.length?a.reduce(function(s,c){return s+c.total},0)/a.length:0)+'</b><span>Valor médio/cliente</span></div></div><div class="central-table-wrap"><table class="central-table"><thead><tr><th>Cliente</th><th>Telefone</th><th>Pedidos</th><th>Total</th><th>Último pedido</th></tr></thead><tbody>'+(a.length?a.map(function(c){return '<tr><td><b>'+esc(c.name)+'</b></td><td>'+esc(c.phone||'—')+'</td><td>'+c.orders+'</td><td><b>'+money(c.total)+'</b></td><td>'+date(c.last)+'</td></tr>'}).join(''):'<tr><td colspan="5"><div class="central-empty compact"><b>Nenhum cliente encontrado.</b></div></td></tr>')+'</tbody></table></div>';}
   function detail(){var o=C.detalhe,itens=C.detalheItens||[];return '<div class="central-detalhe"><div class="central-detail-head"><div><small>PEDIDO</small><h2>#'+esc(o.order_number)+'</h2><span>'+date(o.created_at)+'</span></div><button class="btn" data-central="fechar-detalhe">Fechar</button></div><div class="central-detail-grid"><div><b>Cliente</b><strong>'+esc(o.customer_name||'Cliente')+'</strong><span>'+esc(o.customer_phone||'—')+'</span></div><div><b>Tipo</b><strong>'+esc(o.order_type==='delivery'?'Entrega':'Retirada')+'</strong><span>'+esc(o.delivery_address||'Sem endereço')+'</span></div><div><b>Pagamento</b><strong>'+esc(o.payment_method||'—')+'</strong><span>'+esc(o.payment_change?('Troco para '+money(o.payment_change)):'')+'</span></div><div><b>Total</b><strong>'+money(o.total)+'</strong><span>Subtotal '+money(o.subtotal||o.total)+'</span></div></div><div class="central-status-edit"><b>Status</b><select id="central-detail-status" class="inp">'+STATUSES.filter(function(s){return s[0]!=='all'}).map(function(s){return '<option value="'+s[0]+'" '+(o.status===s[0]?'selected':'')+'>'+s[1]+'</option>'}).join('')+'</select><button class="btn primario" data-central="salvar-status">Salvar status</button></div><div class="central-items"><b>Itens do pedido</b>'+(itens.length?itens.map(function(i){return '<div><span>'+esc(i.quantity)+'× '+esc(i.product_name)+'</span><strong>'+money(i.line_total)+'</strong></div>'}).join(''):'<span>Nenhum item registrado.</span>')+'</div><div class="central-note"><b>Observações</b><p>'+esc(o.notes||'Nenhuma observação.')+'</p></div></div>';}
   function render(){if(C.page==='home'){injectNav();return}root.innerHTML='<div class="central-shell">'+(C.page==='dashboard'?dashboard():C.page==='pedidos'?pageOrders():C.page==='clientes'?pageCustomers():C.page==='dev'?devPage():dashboard())+'</div>';}
-  async function selectStore(id){if(C.realtime&&C.client){try{C.client.removeChannel(C.realtime)}catch(e){}C.realtime=null}if(C.autoRefresh){clearInterval(C.autoRefresh);C.autoRefresh=null}C._stores=C._stores.length?C._stores:await stores();C.loja=C._stores.find(function(l){return l.id===id})||C._stores[0]||null;C.client=clientFor(C.loja);C.session=null;C.orders=[];C.detalhe=null;C.detalheItens=[];render();if(!C.client){toast('Configure o Supabase nesta loja primeiro.');return}var s=await C.client.auth.getSession();C.session=s.data.session||null;if(C.session){await load();subscribeOrders();C.autoRefresh=setInterval(function(){if(C.session)load(true)},60000)}else loginModal();}
+  async function selectStore(id){
+    if(C.realtime&&C.client){try{await C.client.removeChannel(C.realtime)}catch(e){}C.realtime=null}
+    if(C.autoRefresh){clearInterval(C.autoRefresh);C.autoRefresh=null}
+    C._stores=C._stores.length?C._stores:await stores();
+    C.loja=C._stores.find(function(l){return l.id===id})||C._stores[0]||null;
+    C.client=clientFor(C.loja);
+    C.clientKey=C.loja&&C.loja.supabase?(C.loja.slug+'|'+C.loja.supabase.url):null;
+    C.session=null;C.orders=[];C.detalhe=null;C.detalheItens=[];render();
+    if(!C.client){toast('Configure o Supabase nesta loja primeiro.');return}
+    var s=await C.client.auth.getSession();
+    C.session=s.data&&s.data.session?s.data.session:null;
+    if(C.session){await load();subscribeOrders();C.autoRefresh=setInterval(function(){if(C.session)load(true)},60000)}else loginModal();
+  }
   function authError(e){var m=(e&&e.message||'').toLowerCase();if(m.includes('invalid login credentials'))return 'E-mail ou senha incorretos.';if(m.includes('email not confirmed'))return 'Confirme o e-mail da conta antes de entrar.';if(m.includes('too many requests'))return 'Muitas tentativas. Aguarde alguns minutos.';return e&&e.message||'Não foi possível entrar agora.';}
   async function login(){var email=document.getElementById('central-email').value.trim(),pass=document.getElementById('central-password').value,msg=document.getElementById('central-login-msg'),btn=document.getElementById('central-login-submit');if(!email){msg.textContent='Informe seu e-mail.';return}if(!pass){msg.textContent='Informe sua senha.';return}msg.textContent='Entrando…';btn.disabled=true;var r=await C.client.auth.signInWithPassword({email:email,password:pass});if(r.error){msg.textContent=authError(r.error);btn.disabled=false;return}C.session=r.data.session;document.getElementById('central-login').remove();await load();subscribeOrders();}
   async function signup(){var name=(document.getElementById('central-name')||{}).value||'',email=document.getElementById('central-email').value.trim(),pass=document.getElementById('central-password').value,confirm=document.getElementById('central-password-confirm').value,msg=document.getElementById('central-login-msg'),btn=document.getElementById('central-login-submit');if(!name.trim()){msg.textContent='Informe seu nome.';return}if(!email){msg.textContent='Informe seu e-mail.';return}if(pass.length<6){msg.textContent='A senha precisa ter pelo menos 6 caracteres.';return}if(pass!==confirm){msg.textContent='As senhas não conferem.';return}msg.textContent='Criando sua conta…';btn.disabled=true;var r=await C.client.auth.signUp({email:email,password:pass,options:{data:{full_name:name.trim()}}});if(r.error){msg.textContent=authError(r.error);btn.disabled=false;return}if(r.data.session){C.session=r.data.session;document.getElementById('central-login').remove();await load();subscribeOrders();return}msg.className='central-msg ok';msg.textContent='Cadastro criado. Confirme seu e-mail e aguarde o vínculo à loja.';btn.disabled=false;}
@@ -135,5 +164,5 @@
   document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('central-login')){e.preventDefault();var b=document.getElementById('central-login-submit');if(b&&b.dataset.central==='signup')signup();else login();}});
   var obs=new MutationObserver(function(){injectNav()});obs.observe(root,{childList:true,subtree:false});window.__centralObserver=obs;
   window.addEventListener('hashchange',function(){if(location.hash==='#pedidos'){goPage('pedidos')}});
-  stores().then(function(s){C._stores=s;injectNav();if(s.length){C.loja=s[0];C.client=clientFor(C.loja);var p=location.hash==='#pedidos'?'pedidos':'dashboard';C.page=p;render();selectStore(C.loja.id);}else injectNav();}).catch(function(){injectNav();});
+  stores().then(function(s){C._stores=s;injectNav();if(s.length){C.loja=s[0];var p=location.hash==='#pedidos'?'pedidos':'dashboard';C.page=p;render();selectStore(C.loja.id);}else injectNav();}).catch(function(){injectNav();});
 })();
