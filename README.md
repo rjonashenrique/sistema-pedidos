@@ -394,3 +394,8 @@ A Central continua sem `service_role` no navegador. O acesso depende de Supabase
 - máscara de WhatsApp no formulário;
 - resumo de pedidos, gastos e endereços;
 - atualização manual da conta e logout seguro.
+
+
+## V8.1 — Área Dev
+
+A Central recebeu uma área **🧑‍💻 Dev** para diagnóstico seguro do ambiente. Ela mostra versão, configuração da loja, estado do Supabase, PWA, IndexedDB e compatibilidade de deploy sem exibir chaves privadas ou `service_role`. Também permite copiar um diagnóstico sanitizado para suporte técnico.
