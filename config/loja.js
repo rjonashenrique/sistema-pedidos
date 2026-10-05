@@ -54,7 +54,7 @@ window.LOJA = {
     imagem: "assets/compartilhar.jpg",   // 1200x630, JPG ou PNG
     url: ""                              // endereço final do site. Vazio = usa o urlPadrao abaixo
   },
-  urlPadrao: "https://{slug}.vercel.app", // modelo de endereço; {slug} vira o slug da loja
+  urlPadrao: "https://{slug}.netlify.app", // modelo de endereço; {slug} vira o slug da loja
   tracking: { metaPixel: "", googleAnalytics: "" }, // opcionais; só carregam se preenchidos
   // ---------- Conta do cliente / Supabase ----------
   // Preencha no projeto de cada cliente. Use somente a Publishable/anon key pública.
