@@ -1002,7 +1002,14 @@
     var r = await montarZip(l);
     baixar(r.blob, l.slug + '.zip');
     A.exportado = { id: l.id, arquivos: r.total, kb: Math.round(r.blob.size / 1024) };
-    renderSecao();
+    // A exportação também pode ser acionada diretamente pelo card da lista de lojas.
+    // Nesse caso o editor (e, portanto, #miolo) não existe no DOM.
+    // Evita o erro "Cannot set properties of null (setting 'innerHTML')".
+    if (document.getElementById('miolo')) {
+      renderSecao();
+    } else {
+      renderLista();
+    }
     toast(l.slug + '.zip exportado');
   }
   function baixarQR() {
