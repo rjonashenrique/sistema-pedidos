@@ -347,3 +347,24 @@ Não existe badge, rodapé, watermark ou anúncio de Vercel/Netlify no frontend.
 Se a loja for publicada na Netlify e aparecer um selo **Powered by Netlify** no canto inferior direito, isso **não vem do código deste projeto**. A Netlify injeta esse badge no servidor para determinados projetos/planos. Para uma loja de cliente, desative no painel da Netlify em **Project configuration → General → Powered by Netlify badge**. A alteração passa a valer no próximo acesso, sem precisar alterar ou reenviar o código.
 
 O projeto continua compatível com Netlify e Vercel e não adiciona nenhum badge próprio.
+
+## Central de Operações — versão avançada
+
+A Central do Admin Gerador foi atualizada com:
+
+- Visão geral operacional por loja.
+- Indicadores de pedidos, faturamento, pedidos em aberto e clientes.
+- Filtros de período: hoje, 7 dias, 30 dias e todo o período.
+- Pedidos em tempo real via Supabase Realtime, quando habilitado.
+- Fallback de atualização automática a cada 60 segundos.
+- Busca por pedido, cliente, telefone, endereço e pagamento.
+- Filtros por status.
+- Detalhamento do pedido e itens.
+- Atualização do status do pedido com RLS.
+- Base de clientes derivada dos pedidos.
+- Exportação CSV da operação.
+- Indicador de saúde da conexão da loja.
+- Login, cadastro, recuperação de senha e logout administrativos.
+- Multi-lojas com troca de loja no próprio painel.
+
+A Central continua sem `service_role` no navegador. O acesso depende de Supabase Auth + `public.store_admins` + políticas RLS.
