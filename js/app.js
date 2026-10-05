@@ -345,7 +345,16 @@
   function instalarApp() { if (window.__pwaPrompt) { window.__pwaPrompt.prompt(); window.__pwaPrompt.userChoice.finally(function(){ window.__pwaPrompt=null; }); } else flash('No celular, use “Adicionar à tela inicial” para instalar.'); }
 
   // ---------------------------------------------------------------- conta do cliente
-  function contaConfigurada() { return window.AppSupabase && window.AppSupabase.pronto(); }
+  function contaConfigurada() { return !!(window.AppSupabase && window.AppSupabase.pronto && window.AppSupabase.pronto()); }
+  function contaConfigInfo() {
+    var c = (L && L.supabase) || {};
+    return {
+      enabled: c.enabled !== false,
+      url: String(c.url || ''),
+      key: String(c.publishableKey || ''),
+      configurada: !!(c.enabled && c.url && c.publishableKey)
+    };
+  }
   function abrirConta(mode) { set({ account: true, accountMode: mode || 'login' }); }
   function fecharConta() { set({ account: null }); }
   function contaErro(err) { return err && err.message ? err.message : 'Não foi possível concluir. Tente novamente.'; }
@@ -407,7 +416,11 @@
       '<div style="width:100%;max-width:480px;max-height:92vh;overflow:auto;background:#F7F4F0;border-radius:28px 28px 0 0;padding:22px 20px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.18)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px"><div><div style="font-size:12px;font-weight:700;color:var(--escuro);text-transform:uppercase;letter-spacing:.08em">Conta</div><div style="font-size:24px;font-weight:700;margin-top:4px">' + (logged ? 'Olá, ' + esc(contaNome()) : (S.accountMode === 'signup' ? 'Criar sua conta' : 'Entrar na sua conta')) + '</div></div><button data-a="accountClose" aria-label="Fechar" style="width:42px;height:42px;border:0;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">' + X_ICON + '</button></div>';
     if (!contaConfigurada()) {
-      h += '<div style="background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:16px;padding:14px;font-size:13px;line-height:1.5">A conta do cliente está preparada, mas esta loja ainda não foi conectada ao Supabase. Preencha <b>supabase.url</b> e <b>supabase.publishableKey</b> em <b>config/loja.js</b>.</div></div></div>';
+      var ci = contaConfigInfo();
+      h += '<div style="background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;border-radius:16px;padding:14px;font-size:13px;line-height:1.55">' +
+        '<b>Conta do cliente indisponível nesta loja.</b><br>' +
+        'O login e o cadastro ainda não foram ativados para esta loja. Tente novamente mais tarde.' +
+        '</div></div></div>';
       return h;
     }
     if (!logged) {

@@ -341,3 +341,9 @@ O Admin Gerador inclui no ZIP da loja: `config/loja.js`, `vercel.json` e `netlif
 
 ### Branding
 Não existe badge, rodapé, watermark ou anúncio de Vercel/Netlify no frontend. O domínio mostrado ao cliente é definido pelo campo `seo.url`/URL da loja.
+
+## Importante — badge "Powered by Netlify"
+
+Se a loja for publicada na Netlify e aparecer um selo **Powered by Netlify** no canto inferior direito, isso **não vem do código deste projeto**. A Netlify injeta esse badge no servidor para determinados projetos/planos. Para uma loja de cliente, desative no painel da Netlify em **Project configuration → General → Powered by Netlify badge**. A alteração passa a valer no próximo acesso, sem precisar alterar ou reenviar o código.
+
+O projeto continua compatível com Netlify e Vercel e não adiciona nenhum badge próprio.
