@@ -404,3 +404,22 @@ A Central recebeu uma área **🧑‍💻 Dev** para diagnóstico seguro do ambi
 ## Área Dev V8.2
 
 A Central inclui diagnóstico técnico protegido por login administrativo, teste de RLS/Supabase, Realtime, PWA, Service Worker, IndexedDB, ambiente do navegador, limpeza de cache e cópia de relatório técnico sem chaves privadas. A `service_role` nunca é exibida no painel.
+
+## Gerador Multi-Nicho V8.3
+
+O Admin Gerador agora suporta criação profissional por segmento, sem limitar o projeto a hamburguerias. Em **Nicho e modelo** estão disponíveis presets para:
+
+- Alimentação / Delivery
+- Pizzaria
+- Restaurante
+- Cafeteria / Doceria
+- Barbearia
+- Salão de beleza
+- Pet Shop / Banho e Tosa
+- Loja / Comércio
+- Igreja / Ministério
+- Serviços profissionais
+
+Cada preset cria uma base de categorias, produtos/serviços, identidade visual, banner e SEO. O administrador pode editar tudo depois. Contatos, domínio e configurações técnicas são preservados ao trocar de nicho.
+
+O campo de modelo permite trabalhar com **Catálogo / pedidos** ou **Serviços / agendamento**. A arquitetura continua estática, sem servidor no gerador, com dados locais em IndexedDB e exportação independente por loja.
