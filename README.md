@@ -395,40 +395,22 @@ A Central continua sem `service_role` no navegador. O acesso depende de Supabase
 - resumo de pedidos, gastos e endereços;
 - atualização manual da conta e logout seguro.
 
+## V8.4 — Operação Profissional
+- Dashboard executivo com ticket médio, taxa de conclusão e clientes identificados.
+- Desempenho de faturamento por dia e clientes de maior valor.
+- Indicador da última sincronização com Supabase.
+- Central responsiva para desktop e mobile.
+- Sem Área Dev na interface administrativa.
 
-## V8.2 — Área Dev
+## V9 — Operação avançada
 
-A Central recebeu uma área **🧑‍💻 Dev** para diagnóstico seguro do ambiente. Ela mostra versão, configuração da loja, estado do Supabase, PWA, IndexedDB e compatibilidade de deploy sem exibir chaves privadas ou `service_role`. Também permite copiar um diagnóstico sanitizado para suporte técnico.
+A base V9 adiciona módulos operacionais sem alterar o domínio automático (não há automação de domínio nesta versão):
 
+- Painel de Cozinha com colunas por etapa e avanço rápido de status.
+- Caixa com conferência por forma de pagamento e período.
+- Fidelidade analítica com pontos estimados a partir do valor comprado.
+- Dashboard, pedidos e clientes preservados.
+- Área Dev permanece fora da interface.
+- Vercel e Netlify continuam suportados.
 
-## Área Dev V8.2
-
-A Central inclui diagnóstico técnico protegido por login administrativo, teste de RLS/Supabase, Realtime, PWA, Service Worker, IndexedDB, ambiente do navegador, limpeza de cache e cópia de relatório técnico sem chaves privadas. A `service_role` nunca é exibida no painel.
-
-## Gerador Multi-Nicho V8.3
-
-O Admin Gerador agora suporta criação profissional por segmento, sem limitar o projeto a hamburguerias. Em **Nicho e modelo** estão disponíveis presets para:
-
-- Alimentação / Delivery
-- Pizzaria
-- Restaurante
-- Cafeteria / Doceria
-- Barbearia
-- Salão de beleza
-- Pet Shop / Banho e Tosa
-- Loja / Comércio
-- Igreja / Ministério
-- Serviços profissionais
-
-Cada preset cria uma base de categorias, produtos/serviços, identidade visual, banner e SEO. O administrador pode editar tudo depois. Contatos, domínio e configurações técnicas são preservados ao trocar de nicho.
-
-O campo de modelo permite trabalhar com **Catálogo / pedidos** ou **Serviços / agendamento**. A arquitetura continua estática, sem servidor no gerador, com dados locais em IndexedDB e exportação independente por loja.
-
-
-## V8.5 — Correção Supabase / GoTrue
-- A Central agora reutiliza a mesma instância do Supabase por loja/storageKey.
-- Evita criação duplicada de `GoTrueClient` ao inicializar e trocar de loja.
-- A troca de loja encerra o canal Realtime anterior antes de abrir o próximo.
-- O bootstrap inicial não cria mais um cliente Supabase antes de `selectStore()`.
-- O cache de clientes é separado por `slug + URL + publishableKey`, preservando o suporte multi-lojas sem duplicar instâncias da mesma configuração.
-- Nenhuma `service_role` é utilizada no navegador.
+A fidelidade exibida nesta versão é analítica: pontos não são persistidos como saldo financeiro do cliente.

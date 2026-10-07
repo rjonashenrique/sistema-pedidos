@@ -7,33 +7,10 @@
   var DIAS = [['seg', 'Segunda'], ['ter', 'Terça'], ['qua', 'Quarta'], ['qui', 'Quinta'], ['sex', 'Sexta'], ['sab', 'Sábado'], ['dom', 'Domingo']];
   var PAGAMENTOS = ['Pix', 'Dinheiro', 'Crédito', 'Débito'];
   var SECOES = [
-    ['nicho', 'Nicho e modelo'], ['dados', 'Dados da loja'], ['link', 'Link'], ['aparencia', 'Aparência'], ['funcionamento', 'Funcionamento'],
+    ['dados', 'Dados da loja'], ['link', 'Link'], ['aparencia', 'Aparência'], ['funcionamento', 'Funcionamento'],
     ['entrega', 'Entrega e retirada'], ['pagamentos', 'Pagamentos'], ['categorias', 'Categorias'], ['produtos', 'Produtos'],
     ['grupos', 'Grupos de opções'], ['combos', 'Combos'], ['cupons', 'Cupons'], ['compartilhamento', 'Compartilhamento']
   ];
-  
-  var NICHOS = {
-    alimentacao: { nome: 'Alimentação / Delivery', icone: '🍔', descricao: 'Hamburguerias, restaurantes, lanchonetes, pizzarias e delivery.', cor: '#E8590C', secundaria: '#1C1917', escuro: '#8A3B12', categorias: [['Mais pedidos',[['Prato da casa','Delicioso e preparado na hora',29.9],['Combo especial','Acompanha bebida e acompanhamento',39.9]]],['Bebidas',[['Refrigerante','Lata ou garrafa',7.9],['Suco natural','Feito na hora',9.9]]]], grupos: [] },
-    pizzaria: { nome: 'Pizzaria', icone: '🍕', descricao: 'Pizzarias com sabores, bordas, tamanhos e adicionais.', cor: '#D9480F', secundaria: '#24140D', escuro: '#9C2C0E', categorias: [['Pizzas',[['Pizza Média','Escolha o sabor e os adicionais',39.9],['Pizza Grande','Perfeita para compartilhar',49.9]]],['Bebidas',[['Refrigerante','Gelado',7.9],['Suco','Natural',9.9]]]], grupos: [] },
-    restaurante: { nome: 'Restaurante', icone: '🍽️', descricao: 'Restaurantes, marmitas, self-service e pratos à la carte.', cor: '#B45309', secundaria: '#1C1917', escuro: '#78350F', categorias: [['Pratos',[['Prato executivo','Preparado na hora',29.9],['Marmita','Escolha seu acompanhamento',24.9]]],['Bebidas',[['Suco natural','Feito na hora',9.9]]]], grupos: [] },
-    cafeteria: { nome: 'Cafeteria / Doceria', icone: '☕', descricao: 'Cafeterias, doces, bolos, cafés e sobremesas.', cor: '#92400E', secundaria: '#291A12', escuro: '#5C2E18', categorias: [['Cafés',[['Café especial','Preparado na hora',8.9],['Cappuccino','Cremoso e artesanal',12.9]]],['Doces',[['Bolo da casa','Fatia',11.9],['Brownie','Com chocolate',10.9]]]], grupos: [] },
-    barbearia: { nome: 'Barbearia', icone: '💈', descricao: 'Barbearias com serviços e agendamento.', cor: '#2563EB', secundaria: '#111827', escuro: '#1E3A8A', categorias: [['Serviços',[['Corte masculino','Agendamento de horário',35],['Barba','Acabamento profissional',25],['Corte + Barba','Combo de serviços',55]]]], grupos: [] },
-    salao: { nome: 'Salão de beleza', icone: '💇', descricao: 'Salões, estética, manicure e serviços com agendamento.', cor: '#DB2777', secundaria: '#27111F', escuro: '#9D174D', categorias: [['Serviços',[['Corte','Atendimento personalizado',50],['Escova','Finalização',40],['Manicure','Cuidado completo',30]]]], grupos: [] },
-    petshop: { nome: 'Pet Shop / Banho e Tosa', icone: '🐾', descricao: 'Pet shops, banho, tosa e produtos para pets.', cor: '#16A34A', secundaria: '#102018', escuro: '#166534', categorias: [['Serviços',[['Banho','Higiene e cuidado',45],['Tosa','Tosa higiênica ou completa',60]]],['Produtos',[['Ração','Produto para seu pet',49.9],['Petisco','Recompensa especial',14.9]]]], grupos: [] },
-    loja: { nome: 'Loja / Comércio', icone: '🛍️', descricao: 'Lojas de produtos, presentes, roupas e comércio local.', cor: '#7C3AED', secundaria: '#171125', escuro: '#5B21B6', categorias: [['Produtos',[['Produto em destaque','Descrição do produto',49.9],['Produto especial','Descrição do produto',79.9]]]], grupos: [] },
-    igreja: { nome: 'Igreja / Ministério', icone: '⛪', descricao: 'Igrejas, ministérios, eventos, cursos e inscrições.', cor: '#3A6BFF', secundaria: '#0B1430', escuro: '#1D4ED8', categorias: [['Eventos',[['Evento / inscrição','Informações do evento',0],['Curso / encontro','Inscrição online',0]]]], grupos: [] },
-    servicos: { nome: 'Serviços profissionais', icone: '🧑‍💼', descricao: 'Profissionais autônomos, consultorias, assistência e serviços.', cor: '#0891B2', secundaria: '#0B1F24', escuro: '#0E7490', categorias: [['Serviços',[['Atendimento','Solicite um orçamento',0],['Serviço personalizado','Fale com a equipe',0]]]], grupos: [] },
-    academia: { nome: 'Academia / Fitness', icone: '🏋️', descricao: 'Academias, personal trainers, pilates e studios.', cor: '#DC2626', secundaria: '#18181B', escuro: '#991B1B', categorias: [['Planos',[['Plano mensal','Acesso completo',99.9],['Plano trimestral','Economize no trimestre',249.9]]],['Aulas',[['Aula experimental','Conheça o espaço',0],['Personal','Treino personalizado',80]]]], grupos: [] },
-    clinica: { nome: 'Clínica / Saúde', icone: '🩺', descricao: 'Clínicas, consultórios e atendimentos particulares.', cor: '#0EA5E9', secundaria: '#0F172A', escuro: '#0369A1', categorias: [['Especialidades',[['Consulta','Agende seu atendimento',150],['Avaliação','Primeira avaliação',100]]]], grupos: [] },
-    odontologia: { nome: 'Odontologia', icone: '🦷', descricao: 'Consultórios odontológicos e clínicas.', cor: '#0284C7', secundaria: '#082F49', escuro: '#075985', categorias: [['Serviços',[['Avaliação odontológica','Agende uma avaliação',0],['Limpeza','Higiene e prevenção',0]]]], grupos: [] },
-    educacao: { nome: 'Educação / Cursos', icone: '📚', descricao: 'Cursos, escolas, aulas particulares e treinamentos.', cor: '#4F46E5', secundaria: '#111827', escuro: '#3730A3', categorias: [['Cursos',[['Curso online','Inscrição e informações',0],['Aula particular','Agende sua aula',0]]]], grupos: [] },
-    automotivo: { nome: 'Automotivo', icone: '🚗', descricao: 'Oficinas, estética automotiva e serviços para veículos.', cor: '#F59E0B', secundaria: '#1C1917', escuro: '#B45309', categorias: [['Serviços',[['Revisão','Solicite orçamento',0],['Lavagem','Agende seu horário',0],['Polimento','Serviço especializado',0]]]], grupos: [] },
-    hotel: { nome: 'Hotel / Pousada', icone: '🏨', descricao: 'Hotéis, pousadas, hospedagens e reservas.', cor: '#7C3AED', secundaria: '#1E1B4B', escuro: '#5B21B6', categorias: [['Acomodações',[['Quarto standard','Conforto e praticidade',0],['Suíte','Mais espaço e conforto',0]]]], grupos: [] },
-    residencial: { nome: 'Serviços Residenciais', icone: '🧹', descricao: 'Limpeza, manutenção, elétrica, hidráulica e serviços locais.', cor: '#059669', secundaria: '#022C22', escuro: '#047857', categorias: [['Serviços',[['Orçamento','Solicite uma visita',0],['Manutenção','Agende atendimento',0]]]], grupos: [] },
-    eventos: { nome: 'Eventos / Inscrições', icone: '🎟️', descricao: 'Eventos, congressos, workshops, encontros e inscrições.', cor: '#9333EA', secundaria: '#1F1235', escuro: '#6B21A8', categorias: [['Eventos',[['Ingresso','Garanta sua vaga',0],['Workshop','Inscrição online',0]]]], grupos: [] }
-  };
-  function nichoInfo(k) { return NICHOS[k] || NICHOS.alimentacao; }
-
   var IMG = {   // como cada imagem é tratada no upload
     logo: { max: 512 }, produto: { max: 800 }, banner: { max: 1600 },
     compartilhar: { cobrir: [1200, 630], formato: 'image/jpeg', q: 0.86 }
@@ -164,14 +141,14 @@
     DIAS.forEach(function (d) { horarios[d[0]] = { aberto: d[0] !== 'seg', turnos: [{ ini: '18:00', fim: '23:00' }] }; });
     return {
       id: uid('l'), criadoEm: Date.now(), editadoEm: Date.now(),
-      nome: nome || 'Novo negócio', slug: slugify(nome || 'novo-negocio'), slugManual: false, nicho: 'alimentacao', modelo: 'catalogo',
+      nome: nome || 'Nova hamburgueria', slug: slugify(nome || 'nova-hamburgueria'), slugManual: false,
       logo: '', icone: '', endereco: '', whatsapp: '', instagram: '', urlSite: '', urlPadrao: URL_PADRAO,
       cores: { principal: '#E8590C', secundaria: '#1C1917', escuro: '#8A3B12' }, layout: 'lista', mostrarBanner: true,
       banner: { imagem: '', titulo: '', subtitulo: '' },
       horarios: horarios, fechadoManual: false, tempoEntrega: '30 a 45 min', tempoRetirada: '20 a 30 min',
       aceitaEntrega: true, aceitaRetirada: true, taxaEntrega: 0, pedidoMinimo: 0,
       pagamentos: { 'Pix': true, 'Dinheiro': true, 'Crédito': true, 'Débito': true },
-      categorias: [{ id: uid('k'), nome: 'Cardápio', oculta: false }],
+      categorias: [{ id: uid('k'), nome: 'Burgers', oculta: false }, { id: uid('k'), nome: 'Bebidas', oculta: false }],
       produtos: [],
       grupos: [
         grupoPadrao('ponto', 'Ponto da carne', 'unico', 'escolha', true, [['Mal passado'], ['Ao ponto'], ['Bem passado']], 'Ao ponto'),
@@ -195,8 +172,6 @@
   // Converte o window.LOJA de um config/loja.js para o formato do admin
   async function daConfig(L, img) {
     var l = novaLoja(L.nome);
-    l.nicho = L.nicho || (L.segmento && L.segmento.id) || 'alimentacao';
-    l.modelo = L.modelo || ((L.aceitaEntrega === false && L.aceitaRetirada === true) ? 'agenda' : 'catalogo');
     l.categorias = []; l.grupos = [];
     l.slug = L.slug || slugify(L.nome);
     l.slugManual = l.slug !== slugify(L.nome);
@@ -308,7 +283,7 @@
       horarios[k] = h && h.aberto ? h.turnos.filter(function (t) { return t.ini && t.fim; }).map(function (t) { return t.ini + '-' + t.fim; }) : [];
     });
     return {
-      nome: l.nome, slug: l.slug, nicho: l.nicho || 'alimentacao', modelo: l.modelo || 'catalogo', segmento: { id: l.nicho || 'alimentacao', nome: nichoInfo(l.nicho).nome },
+      nome: l.nome, slug: l.slug,
       logo: img(l.logo, 'logo'), favicon: img(l.icone, 'icone'),
       whatsapp: l.whatsapp, endereco: l.endereco, instagram: l.instagram || undefined,
       cores: clone(l.cores), layout: l.layout, mostrarBanner: !!l.mostrarBanner,
@@ -741,35 +716,8 @@
     }).join('') + '</div>';
   }
 
-
-  function aplicarPresetNicho(l, chave) {
-    var n = nichoInfo(chave); l.nicho = chave;
-    l.cores.principal = n.cor; l.cores.secundaria = n.secundaria; l.cores.escuro = n.escuro;
-    l.categorias = []; l.produtos = []; l.grupos = []; l.combos = [];
-    n.categorias.forEach(function (cat) {
-      var cid = uid('k'); l.categorias.push({ id: cid, nome: cat[0], oculta: false });
-      (cat[1] || []).forEach(function (p) { l.produtos.push({ id: uid('p'), nome: p[0], descricao: p[1], preco: p[2], imagem: '', categoriaId: cid, disponivel: true, destaque: l.produtos.length === 0, grupos: [] }); });
-    });
-    l.banner.titulo = n.nome; l.banner.subtitulo = n.descricao;
-    l.seo.titulo = l.nome + ' — ' + n.nome; l.seo.descricao = n.descricao + ' Confira produtos, serviços e informações.';
-    l.tempoEntrega = chave === 'barbearia' || chave === 'salao' || chave === 'servicos' ? 'Consulte o horário' : l.tempoEntrega;
-    l.aceitaEntrega = !['barbearia','salao','igreja','servicos'].includes(chave);
-    l.aceitaRetirada = true;
-  }
-
   // =============================================================== SEÇÕES
   var SEC = {};
-
-  SEC.nicho = function (l) {
-    var n = nichoInfo(l.nicho);
-    var opts = Object.keys(NICHOS).map(function(k){ return '<option value="'+k+'"'+(k===l.nicho?' selected':'')+'>'+NICHOS[k].icone+' '+esc(NICHOS[k].nome)+'</option>'; }).join('');
-    return { sub: 'Escolha o segmento e carregue uma estrutura inicial profissional. Você pode personalizar tudo depois.', html:
-      '<div class="cartao nicho-hero"><div class="nicho-icon">'+n.icone+'</div><div class="flex1"><span class="rotulo">Nicho atual</span><h2>'+esc(n.nome)+'</h2><p>'+esc(n.descricao)+'</p><div class="linha"><span class="tag">'+esc(l.modelo==='agenda'?'Agendamento':l.modelo==='catalogo_agenda'?'Catálogo + agenda':l.modelo==='eventos'?'Eventos':'Catálogo / pedidos')+'</span><span class="dica">'+Object.keys(NICHOS).length+' nichos disponíveis</span></div></div></div>' +
-      '<div class="cartao"><div class="grade2">' + campo('Segmento do negócio','<select class="inp" data-bind="nicho">'+opts+'</select>','O nicho controla o ponto de partida do gerador e os exemplos do catálogo.') + campo('Modelo','<select class="inp" data-bind="modelo"><option value="catalogo"'+(l.modelo!=='agenda' && l.modelo!=='catalogo_agenda' && l.modelo!=='eventos'?' selected':'')+'>Catálogo / pedidos</option><option value="agenda"'+(l.modelo==='agenda'?' selected':'')+'>Serviços / agendamento</option><option value="catalogo_agenda"'+(l.modelo==='catalogo_agenda'?' selected':'')+'>Catálogo + agendamento</option><option value="eventos"'+(l.modelo==='eventos'?' selected':'')+'>Eventos / inscrições</option></select>','Você pode misturar catálogo, atendimento e agendamento.') + '</div>' +
-      '<div class="nicho-presets">'+Object.keys(NICHOS).map(function(k){var x=NICHOS[k];return '<button class="nicho-preset '+(k===l.nicho?'ativo':'')+'" data-act="aplicarNicho" data-v="'+k+'"><b>'+x.icone+' '+esc(x.nome)+'</b><small>'+esc(x.descricao)+'</small></button>';}).join('')+'</div>' +
-      '<div class="faixa aviso">Aplicar um nicho substitui <b>categorias, produtos, grupos e combos</b> atuais. Logo, contatos, Supabase e domínio são preservados.</div></div>' };
-  };
-
   SEC.dados = function (l) {
     return { sub: 'Informações que aparecem no topo do cardápio.', html:
       '<div class="cartao"><div class="grade2">' +
@@ -1162,16 +1110,10 @@
 
   // =============================================================== ações (cliques)
   var acoes = {
-    aplicarNicho: async function (el) { var k=el.dataset.v, n=nichoInfo(k); if (k===A.loja.nicho) return; var ok=await modal({titulo:'Aplicar '+n.nome+'?', texto:'Isso substituirá categorias, produtos, grupos e combos atuais. As demais configurações serão preservadas.', ok:'Aplicar nicho'}); if(!ok)return; aplicarPresetNicho(A.loja,k); mudou(true); toast('Nicho '+n.nome+' aplicado.'); },
     novaLoja: async function () {
-      var nome = await modal({ titulo: 'Novo negócio', campo: '', ph: 'Nome da empresa, loja ou profissional', ok: 'Continuar' });
+      var nome = await modal({ titulo: 'Nova loja', campo: '', ph: 'Nome da hamburgueria', ok: 'Criar' });
       if (!nome || !nome.trim()) return;
-      var listaN = Object.keys(NICHOS).map(function(k){ return '<option value="'+k+'">'+NICHOS[k].icone+' '+esc(NICHOS[k].nome)+'</option>'; }).join('');
-      var escolha = await modal({ titulo: 'Escolha o nicho', texto: 'O gerador criará uma estrutura inicial profissional que você poderá editar depois.', extra: '<select class="inp" id="modal-nicho">'+listaN+'</select><div class="dica">Você poderá trocar o nicho depois sem perder os dados de contato e domínio.</div>', ok: 'Criar loja' });
-      if (!escolha) return;
-      var nf = document.querySelector('.modal-fundo select#modal-nicho');
-      var chave = nf ? nf.value : 'alimentacao';
-      var l = novaLoja(nome.trim()); aplicarPresetNicho(l, chave); await BD.salvar(l); A.lojas.unshift(l); abrirEditor(l.id);
+      var l = novaLoja(nome.trim()); await BD.salvar(l); A.lojas.unshift(l); abrirEditor(l.id);
     },
     editar: function (el) { abrirEditor(el.dataset.id); },
     duplicar: async function (el) {
