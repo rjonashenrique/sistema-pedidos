@@ -414,3 +414,81 @@ A base V9 adiciona módulos operacionais sem alterar o domínio automático (nã
 - Vercel e Netlify continuam suportados.
 
 A fidelidade exibida nesta versão é analítica: pontos não são persistidos como saldo financeiro do cliente.
+
+## V9.5 — Operação comercial avançada
+
+Esta atualização adiciona uma camada operacional para pagamentos, entrega, rastreamento, notificações e relatórios, mantendo o domínio automático por `slug` e sem interface Dev.
+
+### 9. Pagamentos online
+- Central com conciliação de status: pendente, pago, falhou e estornado.
+- Configuração por loja em `config/loja.js`.
+- Estrutura preparada para Mercado Pago via Edge Function/webhook.
+- Nenhum token secreto deve ser colocado no navegador.
+- O checkout/gateway real depende da configuração segura do provedor e das credenciais do cliente.
+
+### 10. Entregador
+- Painel de entregas ativas.
+- Fluxo: aguardando → atribuído → retirado → em rota → chegou → entregue.
+- Estrutura Supabase para `delivery_drivers`.
+
+### 11. Rastreamento
+- Rastreamento em tempo real pelo Supabase Realtime.
+- Área do cliente passa a considerar `tracking_status` para pedidos de entrega.
+- Histórico de status preparado em `order_status_history`.
+
+### 12. Notificações
+- Notificações do navegador para mudanças de status do pedido quando o cliente conceder permissão.
+- Preferências de notificações no Supabase.
+- Central possui ação para solicitar permissão de notificações.
+- Push web persistente com VAPID ainda exige um serviço/Edge Function de envio.
+
+### 13. Relatórios avançados
+- Faturamento, ticket médio, pedidos, conclusão e clientes.
+- Desempenho diário.
+- Mix entrega x retirada.
+- Faturamento por método de pagamento.
+- Exportação CSV.
+
+### Banco V9.5
+Antes de usar os novos módulos em produção, execute `supabase/schema.sql` no projeto Supabase da loja. A migração cria campos de pagamento/rastreamento, entregadores, histórico de status e preferências de notificação.
+
+## V10 — IA, Multi-filiais, Automações e Marketplace/Ecossistema
+
+### 14. IA
+- Assistente analítico local baseado nos dados já carregados pela Central.
+- Recomendações de ticket médio, cancelamentos, delivery e operação.
+- Não envia dados da loja para um provedor de IA externo nesta camada.
+- Uma futura IA generativa pode ser conectada por Edge Function, mantendo chaves privadas no servidor.
+
+### 15. Multi-filiais avançado
+- Visão consolidada das lojas cadastradas no Admin Gerador.
+- Comparativo de pedidos, faturamento e conexão Supabase por filial.
+- Arquitetura continua multi-tenant por `store_slug`.
+- Domínio automático por `slug` permanece inalterado.
+
+### 16. Automações
+- Central de regras para novo pedido, pedido pronto e pedido parado.
+- Base Supabase `automation_rules` preparada para persistência por loja.
+- Canais externos (WhatsApp/e-mail/push) devem ser executados por serviço seguro/Edge Function.
+
+### 17. Marketplace / Ecossistema
+- Área de módulos para transformar o produto em ecossistema.
+- Categorias preparadas para Core, IA, Logística, Growth e Financeiro.
+- Banco `marketplace_modules` + `store_modules` preparado para ativação de módulos por filial.
+- Nenhuma integração de terceiro recebe segredo no frontend.
+
+**Importante:** execute `supabase/schema.sql` no projeto Supabase antes de usar as tabelas V10 em produção.
+
+
+## V10.1 — Entregadores avançado
+- Cadastro operacional por filial
+- Veículo, placa e telefone
+- Status disponível/ocupado/pausa/offline
+- Atribuição de entregador diretamente ao pedido
+- Fila de delivery por etapa
+- Última localização conhecida (latitude/longitude)
+- Realtime preparado para `delivery_drivers`
+- RLS por `store_slug`
+- Histórico e rastreamento continuam integrados ao pedido
+
+Para ativar a persistência, aplique `supabase/schema.sql` no projeto Supabase.

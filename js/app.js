@@ -395,7 +395,7 @@
     var unsub = null;
     set({ trackOrder: Object.assign({}, o), trackUnsub: null });
     if (contaConfigurada() && AppSupabase.subscribeOrder && o.id) {
-      unsub = AppSupabase.subscribeOrder(o.id, function (novo) { set({ trackOrder: Object.assign({}, S.trackOrder || {}, novo) }); carregarConta(); });
+      unsub = AppSupabase.subscribeOrder(o.id, function (novo) { var anterior=S.trackOrder||{}; set({ trackOrder: Object.assign({}, anterior, novo) }); if((L.notificacoes||{}).enabled && (L.notificacoes||{}).browser && (L.notificacoes||{}).pedidoStatus && 'Notification' in window && Notification.permission==='granted' && novo.status && novo.status!==anterior.status){ try{ new Notification(L.nome||'Pedido atualizado',{body:(STATUS_CLIENTE[novo.status]&&STATUS_CLIENTE[novo.status][0])||'Seu pedido foi atualizado.'}); }catch(e){} } carregarConta(); });
       set({ trackUnsub: unsub });
     }
   }
@@ -403,6 +403,8 @@
   function renderRastreamento() {
     var o = S.trackOrder; if (!o) return '';
     var st = STATUS_CLIENTE[o.status] || ['Pedido', 'Status atualizado.'];
+    var rast = {waiting:'Aguardando entregador',assigned:'Entregador atribuído',picked_up:'Pedido retirado',on_the_way:'Entregador a caminho',arrived:'Entregador chegou',delivered:'Entrega concluída'};
+    if (o.order_type === 'delivery' && o.tracking_status && rast[o.tracking_status]) st = [rast[o.tracking_status], st[1]];
     var steps = ['received','confirmed','preparing','ready'];
     if (o.order_type === 'delivery') steps.push('out_for_delivery');
     steps.push('completed');

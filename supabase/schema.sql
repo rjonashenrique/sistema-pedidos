@@ -305,3 +305,159 @@ $$;
 
 revoke all on function public.create_customer_order(jsonb) from public, anon;
 grant execute on function public.create_customer_order(jsonb) to authenticated;
+
+
+-- V9.5: pagamentos online, entrega, rastreamento, notificações e relatórios
+alter table public.orders add column if not exists payment_status text not null default 'pending';
+alter table public.orders add column if not exists payment_provider text;
+alter table public.orders add column if not exists payment_id text;
+alter table public.orders add column if not exists payment_url text;
+alter table public.orders add column if not exists courier_id uuid;
+alter table public.orders add column if not exists courier_name text;
+alter table public.orders add column if not exists courier_phone text;
+alter table public.orders add column if not exists tracking_status text default 'waiting';
+alter table public.orders add column if not exists estimated_minutes integer;
+alter table public.orders add column if not exists delivered_at timestamptz;
+
+alter table public.orders drop constraint if exists orders_payment_status_check;
+alter table public.orders add constraint orders_payment_status_check check (payment_status in ('pending','waiting','paid','failed','refunded','cancelled'));
+alter table public.orders drop constraint if exists orders_tracking_status_check;
+alter table public.orders add constraint orders_tracking_status_check check (tracking_status in ('waiting','assigned','picked_up','on_the_way','arrived','delivered','cancelled'));
+
+create table if not exists public.delivery_drivers (
+  id uuid primary key default gen_random_uuid(),
+  store_slug text not null,
+  name text not null,
+  phone text,
+  vehicle_type text not null default 'moto',
+  plate text,
+  status text not null default 'offline',
+  latitude numeric,
+  longitude numeric,
+  last_location_at timestamptz,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.delivery_drivers add column if not exists vehicle_type text not null default 'moto';
+alter table public.delivery_drivers add column if not exists plate text;
+alter table public.delivery_drivers add column if not exists status text not null default 'offline';
+alter table public.delivery_drivers add column if not exists latitude numeric;
+alter table public.delivery_drivers add column if not exists longitude numeric;
+alter table public.delivery_drivers add column if not exists last_location_at timestamptz;
+alter table public.delivery_drivers drop constraint if exists delivery_drivers_status_check;
+alter table public.delivery_drivers add constraint delivery_drivers_status_check check (status in ('available','busy','paused','offline'));
+create index if not exists delivery_drivers_store_idx on public.delivery_drivers(store_slug, active);
+
+create table if not exists public.order_status_history (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  status text not null,
+  note text,
+  created_at timestamptz not null default now(),
+  changed_by uuid references auth.users(id) on delete set null
+);
+create index if not exists order_status_history_order_idx on public.order_status_history(order_id, created_at desc);
+
+create table if not exists public.notification_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  browser_enabled boolean not null default true,
+  order_updates boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.delivery_drivers enable row level security;
+alter table public.order_status_history enable row level security;
+alter table public.notification_preferences enable row level security;
+grant select, insert, update, delete on public.delivery_drivers to authenticated;
+grant select, insert on public.order_status_history to authenticated;
+grant select, insert, update on public.notification_preferences to authenticated;
+
+drop policy if exists "drivers_store_admin" on public.delivery_drivers;
+create policy "drivers_store_admin" on public.delivery_drivers for all to authenticated
+using (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=delivery_drivers.store_slug))
+with check (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=delivery_drivers.store_slug));
+
+drop policy if exists "history_store_admin" on public.order_status_history;
+create policy "history_store_admin" on public.order_status_history for select to authenticated
+using (exists (select 1 from public.orders o join public.store_admins sa on sa.store_slug=o.store_slug where o.id=order_status_history.order_id and sa.user_id=(select auth.uid())));
+drop policy if exists "history_insert_admin" on public.order_status_history;
+create policy "history_insert_admin" on public.order_status_history for insert to authenticated
+with check (exists (select 1 from public.orders o join public.store_admins sa on sa.store_slug=o.store_slug where o.id=order_status_history.order_id and sa.user_id=(select auth.uid())));
+
+drop policy if exists "notification_own" on public.notification_preferences;
+create policy "notification_own" on public.notification_preferences for all to authenticated
+using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+
+alter table public.orders add column if not exists report_channel text;
+create index if not exists orders_store_payment_idx on public.orders(store_slug, payment_status, created_at desc);
+create index if not exists orders_store_tracking_idx on public.orders(store_slug, tracking_status, created_at desc);
+
+-- V10: IA, automações e ecossistema multi-tenant
+create table if not exists public.automation_rules (
+  id uuid primary key default gen_random_uuid(),
+  store_slug text not null,
+  name text not null,
+  trigger_key text not null,
+  action_key text not null,
+  enabled boolean not null default true,
+  config jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists automation_rules_store_idx on public.automation_rules(store_slug, enabled);
+
+create table if not exists public.marketplace_modules (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  category text not null,
+  description text,
+  active boolean not null default true,
+  config jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.store_modules (
+  id uuid primary key default gen_random_uuid(),
+  store_slug text not null,
+  module_id uuid not null references public.marketplace_modules(id) on delete cascade,
+  enabled boolean not null default true,
+  config jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  unique(store_slug,module_id)
+);
+create index if not exists store_modules_store_idx on public.store_modules(store_slug, enabled);
+
+alter table public.automation_rules enable row level security;
+alter table public.marketplace_modules enable row level security;
+alter table public.store_modules enable row level security;
+grant select, insert, update, delete on public.automation_rules to authenticated;
+grant select on public.marketplace_modules to authenticated;
+grant select, insert, update, delete on public.store_modules to authenticated;
+
+drop policy if exists "automation_store_admin" on public.automation_rules;
+create policy "automation_store_admin" on public.automation_rules for all to authenticated
+using (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=automation_rules.store_slug))
+with check (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=automation_rules.store_slug));
+
+drop policy if exists "marketplace_read" on public.marketplace_modules;
+create policy "marketplace_read" on public.marketplace_modules for select to authenticated using (active=true);
+
+drop policy if exists "store_modules_admin" on public.store_modules;
+create policy "store_modules_admin" on public.store_modules for all to authenticated
+using (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=store_modules.store_slug))
+with check (exists (select 1 from public.store_admins sa where sa.user_id=(select auth.uid()) and sa.store_slug=store_modules.store_slug));
+
+
+-- V10.1: operação avançada de entregadores
+create index if not exists delivery_drivers_status_idx on public.delivery_drivers(store_slug, status, active);
+alter table public.orders add column if not exists courier_assigned_at timestamptz;
+alter table public.orders add column if not exists courier_distance_km numeric;
+
+-- Realtime para operação de delivery
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.delivery_drivers;
+EXCEPTION WHEN duplicate_object THEN NULL; WHEN undefined_object THEN NULL; END $$;

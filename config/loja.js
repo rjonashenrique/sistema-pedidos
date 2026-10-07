@@ -37,6 +37,23 @@ window.LOJA = {
   taxaEntrega: 6.9,               // 0 = "Grátis"
   pedidoMinimo: 25,               // só para entrega. 0 = sem mínimo
   pagamentos: ["Pix", "Dinheiro", "Crédito", "Débito"],   // "Dinheiro" mostra o campo de troco
+  pagamentosOnline: {
+    enabled: false,
+    provider: "mercado_pago",
+    publicKey: "",
+    checkoutUrl: "",
+    webhookConfigured: false
+  },
+  entregador: {
+    enabled: true,
+    modo: "manual",
+    tempoEstimado: "30 a 45 min"
+  },
+  notificacoes: {
+    enabled: true,
+    browser: true,
+    pedidoStatus: true
+  },
   cupons: {                       // CÓDIGO: { tipo: "percentual" | "fixo", valor }
     PRIMEIRA10: { tipo: "percentual", valor: 10 },
     BRASA5: { tipo: "fixo", valor: 5 }
