@@ -492,3 +492,8 @@ Antes de usar os novos módulos em produção, execute `supabase/schema.sql` no 
 - Histórico e rastreamento continuam integrados ao pedido
 
 Para ativar a persistência, aplique `supabase/schema.sql` no projeto Supabase.
+
+
+## V10.1 → SaaS 2.0 Advanced
+
+A camada SaaS multiempresa foi adicionada em `supabase/saas-v2-schema.sql`, com Super Admin em `super-admin/` e templates de Edge Functions. Consulte `README-SaaS-2.0.md`.
