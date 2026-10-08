@@ -29,6 +29,15 @@
       '</div>';
   }
 
+  // O link de cadastro usa caminho absoluto para funcionar mesmo quando
+  // o painel é aberto por URLs com/sem barra final no Netlify.
+  document.addEventListener('click', function (event) {
+    var link = event.target && event.target.closest ? event.target.closest('.js-go-cadastro') : null;
+    if (!link) return;
+    event.preventDefault();
+    window.location.assign('/cadastro/');
+  });
+
   async function getContext() {
     // 1) Caminho principal: RPC SECURITY DEFINER.
     // Evita que uma alteração de RLS/View esconda uma empresa já criada.
@@ -67,7 +76,7 @@
         errorBox(
           'Banco ainda não atualizado',
           'Execute no Supabase o arquivo supabase/saas-v2-onboarding.sql desta versão. Depois recarregue esta página.',
-          '<p><a class="btn" href="../cadastro/">Ir para criação da hamburgueria</a></p>'
+          '<p><a class="btn" href="/cadastro/" class="js-go-cadastro">Ir para criação da hamburgueria</a></p>'
         );
       } else {
         errorBox('Não foi possível carregar sua empresa', m, '<p><a class="btn" href="../">Voltar</a></p>');
@@ -80,7 +89,7 @@
       errorBox(
         'Sua conta ainda não possui uma empresa',
         'A conta está autenticada, mas não existe uma organização ativa vinculada a ela. Crie sua hamburgueria para liberar o painel.',
-        '<p><a class="btn" href="../cadastro/">🏪 Criar minha hamburgueria</a></p>'
+        '<p><a class="btn" href="/cadastro/" class="js-go-cadastro">🏪 Criar minha hamburgueria</a></p>'
       );
       return;
     }
