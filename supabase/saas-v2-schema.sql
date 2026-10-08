@@ -361,6 +361,33 @@ alter table public.invoices enable row level security;
 alter table public.audit_logs enable row level security;
 
 -- Policies administrativas: SUPER_ADMIN ou membro da organização/loja.
+-- Idempotência: permite executar novamente sem erro de política já existente.
+drop policy if exists plans_read_public on public.plans;
+drop policy if exists org_superadmin_or_member on public.organizations;
+drop policy if exists profiles_self_or_super on public.profiles;
+drop policy if exists members_access on public.organization_members;
+drop policy if exists stores_access on public.stores;
+drop policy if exists store_settings_access on public.store_settings;
+drop policy if exists hours_access on public.business_hours;
+drop policy if exists categories_access on public.categories;
+drop policy if exists products_access on public.products;
+drop policy if exists groups_access on public.option_groups;
+drop policy if exists options_access on public.options;
+drop policy if exists combos_access on public.combos;
+drop policy if exists combo_items_access on public.combo_items;
+drop policy if exists coupons_access on public.coupons;
+drop policy if exists customers_access on public.customers;
+drop policy if exists addresses_access on public.delivery_addresses;
+drop policy if exists orders_access on public.orders_v2;
+drop policy if exists order_items_access on public.order_items_v2;
+drop policy if exists order_item_options_access on public.order_item_options_v2;
+drop policy if exists order_history_access on public.order_status_history_v2;
+drop policy if exists payments_access on public.payments_v2;
+drop policy if exists notifications_access on public.notifications_v2;
+drop policy if exists subscriptions_access on public.subscriptions;
+drop policy if exists invoices_access on public.invoices;
+drop policy if exists audit_access on public.audit_logs;
+
 create policy plans_read_public on public.plans for select using (active=true or public.is_super_admin());
 create policy org_superadmin_or_member on public.organizations for all using (public.is_super_admin() or exists(select 1 from public.organization_members m where m.organization_id=id and m.user_id=auth.uid())) with check(public.is_super_admin() or exists(select 1 from public.organization_members m where m.organization_id=id and m.user_id=auth.uid()));
 create policy profiles_self_or_super on public.profiles for all using (id=auth.uid() or public.is_super_admin()) with check(id=auth.uid() or public.is_super_admin());

@@ -1048,8 +1048,36 @@
   });
 
   window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); window.__pwaPrompt = e; render(); });
+  async function carregarAparenciaPublica() {
+    try {
+      var c = AppSupabase && AppSupabase.getClient ? AppSupabase.getClient() : null;
+      if (!c || !L.slug) return;
+      var r = await c.rpc('get_public_store_appearance', { p_slug: L.slug });
+      if (r.error || !r.data) return;
+      var a = r.data;
+      L.logo = a.logo_url || L.logo;
+      L.favicon = a.favicon_url || L.favicon;
+      L.cores = Object.assign({}, L.cores || {}, {
+        principal: a.primary_color || (L.cores || {}).principal,
+        secundaria: a.secondary_color || (L.cores || {}).secundaria
+      });
+      L.banner = Object.assign({}, L.banner || {}, {
+        imagem: a.cover_url || (L.banner || {}).imagem
+      });
+      var rootStyle = document.documentElement.style;
+      if (a.primary_color) rootStyle.setProperty('--cor', a.primary_color);
+      if (a.secondary_color) rootStyle.setProperty('--cor2', a.secondary_color);
+      if (a.dark_background) rootStyle.setProperty('--tema-dark-bg', a.dark_background);
+      if (a.light_background) rootStyle.setProperty('--tema-light-bg', a.light_background);
+      if (a.theme) document.documentElement.setAttribute('data-store-theme', a.theme);
+    } catch (e) {
+      // O cardápio continua usando config/loja.js se a camada de aparência ainda não estiver migrada.
+    }
+  }
+
   if (contaConfigurada()) { AppSupabase.onAuth(function () { carregarConta(); }); carregarConta(); }
   render();
+  carregarAparenciaPublica().then(function () { render(); });
   setInterval(render, 30000);   // mantém o status aberto/fechado em dia
   // Volta de outro app (ex.: WhatsApp/Instagram): recalcula horário
   document.addEventListener('visibilitychange', function () { if (!document.hidden) render(); });
