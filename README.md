@@ -497,3 +497,10 @@ Para ativar a persistência, aplique `supabase/schema.sql` no projeto Supabase.
 ## V10.1 → SaaS 2.0 Advanced
 
 A camada SaaS multiempresa foi adicionada em `supabase/saas-v2-schema.sql`, com Super Admin em `super-admin/` e templates de Edge Functions. Consulte `README-SaaS-2.0.md`.
+
+---
+
+## SaaS 2.1 — criação da empresa pelo próprio cliente
+A pasta `cadastro/` adiciona o onboarding self-service: o cliente cria sua conta, cria a própria hamburgueria e recebe o papel `OWNER` naquela organização. `entrar/` faz login e `painel/` apresenta o contexto da empresa.
+
+Execute também `supabase/saas-v2-onboarding.sql` após `supabase/saas-v2-schema.sql`.
