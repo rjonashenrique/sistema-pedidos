@@ -510,3 +510,6 @@ A função cria a loja, associação `owner` e assinatura de teste de 7 dias em 
 
 ### Prévia de link por slug (V10.4)
 Na Área Dev, o campo do slug sugere um endereço a partir do nome da loja e mostra a prévia `https://{slug}.netlify.app`. Esse formato é uma convenção de URL: cada subdomínio precisa existir/ser configurado na Netlify e a aplicação deve identificar a loja pelo hostname. Até isso estar configurado, use o link alternativo do domínio principal com `?slug=`.
+
+## V10.5 — Assistente de configuração da loja
+Acesse `/configuracao/?store=UUID` pelo atalho “Configurar loja · 12 etapas” no painel da plataforma. Veja `INSTALACAO-CONFIGURACAO-V10.5.md` e revise a migração aditiva `supabase/migrations/V10_5_store_configuration_wizard.sql` antes de executá-la. Não substitui a migração V10 nem altera pedidos antigos. Categorias, horários, grupos de opções, combos e cupons são salvos no JSONB; a aplicação dessas regras no checkout público requer integração adicional.
