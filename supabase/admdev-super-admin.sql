@@ -35,10 +35,27 @@ begin
   values (v_user_id, 'SUPER_ADMIN', true)
   on conflict (user_id) do update
     set role = excluded.role, active = true, updated_at = now();
+
+  -- Compatibilidade com o painel legado, que ainda verifica organization_members.
+  -- Cria uma organização técnica de administração somente se ainda não existir.
+  insert into public.organizations (name, slug, status)
+  values ('Jonash.dev - Administração da Plataforma', 'jonashdev-admdev', 'ATIVA')
+  on conflict (slug) do nothing;
+
+  insert into public.organization_members (organization_id, user_id, role, status)
+  select o.id, v_user_id, 'SUPER_ADMIN', 'ACTIVE'
+  from public.organizations o
+  where o.slug = 'jonashdev-admdev'
+  on conflict (organization_id, user_id) do update
+    set role = 'SUPER_ADMIN', status = 'ACTIVE';
 end $$;
 
--- Verifique a autorização sem expor credenciais:
-select u.email, a.role, a.active, a.created_at
+-- Verifique as duas autorizações:
+select u.email, a.role as platform_role, a.active,
+       m.role as organization_role, m.status as member_status,
+       o.name as organization_name, a.created_at
 from public.platform_admins a
 join auth.users u on u.id = a.user_id
+left join public.organization_members m on m.user_id = a.user_id
+left join public.organizations o on o.id = m.organization_id
 where lower(u.email) = lower('rojonas71@gmail.com');
