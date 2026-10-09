@@ -538,8 +538,8 @@
       '<div style="display:flex;align-items:center;gap:5px;font-size:13px;color:#6B635C;margin-top:3px;white-space:nowrap;overflow:hidden">' +
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M12 21s-7-6.2-7-12a7 7 0 1 1 14 0c0 5.8-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>' +
       '<span style="overflow:hidden;text-overflow:ellipsis">' + esc(L.endereco) + '</span></div></div>' +
-      '<button data-a="accountOpen" title="Minha conta" style="width:46px;height:46px;border-radius:50%;border:1px solid #E0D9D1;background:#fff;color:#1C1917;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">' +
-      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"></path></svg></button>' +
+      '<button data-a="accountOpen" title="Entrar na sua conta" aria-label="Entrar na sua conta" style="min-height:46px;border-radius:24px;border:1px solid #E0D9D1;background:#fff;color:#1C1917;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;cursor:pointer;flex-shrink:0;font:600 12px/1.2 inherit">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.8-3.3 3.1-5 7-5s6.2 1.7 7 5"></path></svg><span>Entrar na sua conta</span></button>' +
       '<a href="' + esc(waLink('Olá! Vim pelo cardápio da ' + (L.nome || '') + '.')) + '" target="_blank" rel="noopener" title="Fale conosco no WhatsApp" style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">' +
       '<span style="width:46px;height:46px;border-radius:50%;background:var(--cor2);color:#fff;display:flex;align-items:center;justify-content:center">' +
       '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="' + WA_PATH + '"></path></svg></span>' +

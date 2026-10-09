@@ -401,3 +401,11 @@ A Central continua sem `service_role` no navegador. O acesso depende de Supabase
 - Indicador da última sincronização com Supabase.
 - Central responsiva para desktop e mobile.
 - Sem Área Dev na interface administrativa.
+
+
+## V8.5 — Área do Dev e acesso à conta
+
+- Adicionada a seção **Área do Dev** à navegação da Central, com diagnóstico operacional básico, estado de conexão, loja ativa, host, Supabase, sessão e Realtime.
+- Adicionado resumo técnico seguro para copiar, sem exibir chaves ou dados de clientes.
+- O cabeçalho da loja apresenta o botão **Entrar na sua conta** de forma explícita.
+- A Área do Dev é uma ferramenta de suporte; não substitui as políticas RLS nem a validação de permissões no Supabase.
