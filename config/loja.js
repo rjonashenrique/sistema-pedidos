@@ -3,7 +3,8 @@
 // ============================================================
 window.LOJA = {
   nome: "Brasa Burger",
-  slug: "brasa-burger",           // nome do link: só letras minúsculas, números e hífen
+  slug: "brasa-burger",           // identificador único da loja: letras minúsculas, números e hífen
+  dominioModelo: "https://{slug}.vercel.app", // modelos: https://{slug}.vercel.app ou https://{slug}.netlify.app; o host precisa ser configurado antes de usar
   logo: "",                       // ex: "assets/logo.webp". Vazio = mostra as iniciais do nome
   favicon: "",                    // ícone da aba. Vazio = usa a logo ou as iniciais na cor principal
   whatsapp: "5511999999999",      // DDI + DDD + número, só dígitos

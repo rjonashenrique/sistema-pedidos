@@ -409,3 +409,57 @@ A Central continua sem `service_role` no navegador. O acesso depende de Supabase
 - Adicionado resumo técnico seguro para copiar, sem exibir chaves ou dados de clientes.
 - O cabeçalho da loja apresenta o botão **Entrar na sua conta** de forma explícita.
 - A Área do Dev é uma ferramenta de suporte; não substitui as políticas RLS nem a validação de permissões no Supabase.
+
+## V8.6 — Área do Dono
+
+A Central inclui a seção **👑 Área do Dono**, com visão executiva da loja, métricas de pedidos, valor bruto, pedidos não cancelados, ticket médio, cancelamentos, pedidos em andamento e ações rápidas para Pedidos/Clientes/CSV.
+
+O acesso visual é condicionado ao papel `owner` da tabela `public.store_admins` para o usuário autenticado e o `store_slug` selecionado. Para vincular um proprietário, use a instrução em `supabase/admin-central.sql` e mantenha a política RLS ativa. Os valores são indicadores operacionais baseados nos pedidos carregados (até 1.000); não representam lucro líquido, pois não descontam custos, taxas e despesas.
+
+## V8.7 — links privados individuais por loja
+
+- A Central aceita `admin/admin.html?loja=SLUG` e fixa a loja escolhida pelo link.
+- A Área do Dono mostra o link individual e permite copiá-lo.
+- O login usa Supabase Auth; a conta precisa estar vinculada ao slug em `public.store_admins`.
+- Contas sem vínculo são bloqueadas antes de carregar pedidos/clientes.
+- O navegador não pode criar ou editar vínculos administrativos; somente um administrador do banco deve provisioná-los.
+- O arquivo `supabase/seguranca-links-privados.sql` endurece grants e políticas para evitar INSERT direto e restringe UPDATE de pedidos a `status` e `updated_at`.
+
+### Ativação obrigatória no Supabase
+
+1. Faça backup do banco.
+2. Se ainda não aplicou o esquema inicial, execute primeiro `supabase/schema.sql`.
+3. Execute `supabase/seguranca-links-privados.sql` no SQL Editor do projeto correto.
+4. Crie/confirme a conta de cada proprietário em **Authentication → Users**.
+5. Execute o exemplo de vínculo no final do SQL, usando o e-mail e o `store_slug` corretos para cada dono.
+6. Entregue o link `https://SEU-DOMINIO/admin/admin.html?loja=SLUG` ao proprietário.
+7. Teste com duas contas diferentes e confirme que uma não consegue abrir a loja da outra.
+
+**Importante:** o link não é uma senha e não substitui o RLS. O slug identifica a loja; a sessão autenticada e a linha em `store_admins` determinam a autorização. O SQL incluído no ZIP precisa ser aplicado ao projeto Supabase antes de considerar a proteção ativa no banco.
+
+
+## V8.8 — Gerador de links por slug
+
+A Área do Dono agora mostra e permite copiar dois endereços gerados pelo slug da loja:
+
+- **Cardápio público:** `https://{slug}.vercel.app` (exemplo: `https://brasa-burger.vercel.app`).
+- **Área privada do proprietário:** `https://{slug}.vercel.app/admin/admin.html?loja={slug}` (login Supabase e RLS obrigatórios).
+
+O slug usa o identificador configurado em `config/loja.js`; se estiver ausente, o nome da loja é normalizado para minúsculas, sem acentos e com hífens. O modelo pode ser configurado em `dominioModelo`.
+
+**Limitação de hospedagem:** o código gera os endereços, mas não cria automaticamente projetos/domínios na Vercel. O domínio padrão `slug.vercel.app` só funcionará quando esse hostname estiver atribuído e publicado para o projeto correspondente. Para várias lojas no mesmo projeto com subdomínios dinâmicos, configure um domínio próprio com wildcard (por exemplo `*.seudominio.com`) e roteamento multi-tenant. Até configurar e testar o domínio, não entregue o link como se estivesse ativo.
+
+O endereço privado não é um segredo: o login, o vínculo do usuário em `public.store_admins` e as políticas RLS é que autorizam o acesso. Execute `supabase/schema.sql` e `supabase/seguranca-links-privados.sql` no projeto correto e teste com contas de duas lojas antes de usar dados reais.
+
+
+## V8.9 — Links para Vercel e Netlify
+
+Na Área do Dono, o seletor de hospedagem permite gerar links para três modelos:
+
+- **Vercel:** `https://{slug}.vercel.app`
+- **Netlify:** `https://{slug}.netlify.app`
+- **Domínio personalizado:** usa `dominioModelo` em `config/loja.js`.
+
+Exemplo para o slug `brasa-burger`: `https://brasa-burger.netlify.app` e `https://brasa-burger.netlify.app/admin/admin.html?loja=brasa-burger`. O link privado continua protegido por Supabase Auth, vínculo em `public.store_admins` e políticas RLS.
+
+**Limitação importante:** o seletor só gera os endereços. Ele não cria automaticamente sites, aliases, subdomínios ou domínios na Vercel/Netlify. Em hospedagem padrão, `brasa-burger.netlify.app` só funciona se existir um site Netlify com esse subdomínio. Para várias lojas no mesmo site, use domínio próprio com wildcard e implemente/valide o roteamento multi-tenant; não presuma que o parâmetro `?loja=` troca sozinho o cardápio público. Antes de compartilhar, configure o host, publique e teste os links.
