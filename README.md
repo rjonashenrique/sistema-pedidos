@@ -437,29 +437,44 @@ O acesso visual é condicionado ao papel `owner` da tabela `public.store_admins`
 
 **Importante:** o link não é uma senha e não substitui o RLS. O slug identifica a loja; a sessão autenticada e a linha em `store_admins` determinam a autorização. O SQL incluído no ZIP precisa ser aplicado ao projeto Supabase antes de considerar a proteção ativa no banco.
 
+## V8.8 — Área do Desenvolvedor privada em `/dev/`
 
-## V8.8 — Gerador de links por slug
+- Rota dedicada `/dev/` com página própria e `noindex/nofollow`.
+- Login por Supabase Auth, com e-mail autorizado `rojonas71@gmail.com` pré-preenchido.
+- A Área do Desenvolvedor não carrega pedidos nem dados de clientes e não depende do papel `owner` da loja.
+- A rota separa o diagnóstico técnico da Central operacional dos proprietários.
+- A área não oferece cadastro; a recuperação de senha usa o fluxo de Supabase Auth.
+- O código não contém `service_role` nem concede privilégios no banco. O e-mail permitido é uma barreira de interface para esta página de diagnóstico, não substitui RLS nem deve ser usado como autorização para operações privilegiadas no backend.
+- Netlify redireciona `/dev` para `/dev/`; Vercel usa o diretório `dev/index.html` e o redirecionamento canônico.
 
-A Área do Dono agora mostra e permite copiar dois endereços gerados pelo slug da loja:
+Link após publicar: `https://SEU-DOMINIO/dev/`.
 
-- **Cardápio público:** `https://{slug}.vercel.app` (exemplo: `https://brasa-burger.vercel.app`).
-- **Área privada do proprietário:** `https://{slug}.vercel.app/admin/admin.html?loja={slug}` (login Supabase e RLS obrigatórios).
+## V8.9 — Rota dedicada `/dev/admin/admin.html`
 
-O slug usa o identificador configurado em `config/loja.js`; se estiver ausente, o nome da loja é normalizado para minúsculas, sem acentos e com hífens. O modelo pode ser configurado em `dominioModelo`.
+- Página da Área do Desenvolvedor disponível em `dev/admin/admin.html`.
+- A Central reconhece esse caminho como modo Dev e mantém o login restrito ao e-mail autorizado `rojonas71@gmail.com`.
+- Os caminhos relativos de CSS, configuração da loja e script central foram ajustados para a página aninhada.
+- Netlify e Vercel incluem rota curta `/dev/admin` para a página dedicada.
+- A restrição por e-mail no frontend não substitui autorização server-side/RLS para operações privilegiadas.
 
-**Limitação de hospedagem:** o código gera os endereços, mas não cria automaticamente projetos/domínios na Vercel. O domínio padrão `slug.vercel.app` só funcionará quando esse hostname estiver atribuído e publicado para o projeto correspondente. Para várias lojas no mesmo projeto com subdomínios dinâmicos, configure um domínio próprio com wildcard (por exemplo `*.seudominio.com`) e roteamento multi-tenant. Até configurar e testar o domínio, não entregue o link como se estivesse ativo.
 
-O endereço privado não é um segredo: o login, o vínculo do usuário em `public.store_admins` e as políticas RLS é que autorizam o acesso. Execute `supabase/schema.sql` e `supabase/seguranca-links-privados.sql` no projeto correto e teste com contas de duas lojas antes de usar dados reais.
+## V9.0 — Área do Dono com link dedicado por loja
 
+- Criada a rota privada `/dono/`, separada da Central e da Área Dev.
+- Links individuais no formato `https://SEU-DOMINIO/dono/?loja=SLUG`.
+- O cartão “Link privado do proprietário” agora sempre gera o endereço `/dono/` com o slug da loja atual.
+- A página dedicada exige slug no link, autenticação Supabase Auth e papel `owner` em `public.store_admins` para aquele `store_slug`.
+- A Área do Dono não oferece cadastro; recuperação de senha continua disponível.
+- Netlify/Vercel configurados para a rota `/dono/`.
+- A URL não é um mecanismo de autorização: manter RLS ativo e criar os vínculos de cada dono pelo processo administrativo seguro.
 
-## V8.9 — Links para Vercel e Netlify
+Link de exemplo após publicar: `https://SEU-DOMINIO/dono/?loja=brasa-burger`.
 
-Na Área do Dono, o seletor de hospedagem permite gerar links para três modelos:
+## V9.1 — Área do Desenvolvedor multi-lojas
 
-- **Vercel:** `https://{slug}.vercel.app`
-- **Netlify:** `https://{slug}.netlify.app`
-- **Domínio personalizado:** usa `dominioModelo` em `config/loja.js`.
-
-Exemplo para o slug `brasa-burger`: `https://brasa-burger.netlify.app` e `https://brasa-burger.netlify.app/admin/admin.html?loja=brasa-burger`. O link privado continua protegido por Supabase Auth, vínculo em `public.store_admins` e políticas RLS.
-
-**Limitação importante:** o seletor só gera os endereços. Ele não cria automaticamente sites, aliases, subdomínios ou domínios na Vercel/Netlify. Em hospedagem padrão, `brasa-burger.netlify.app` só funciona se existir um site Netlify com esse subdomínio. Para várias lojas no mesmo site, use domínio próprio com wildcard e implemente/valide o roteamento multi-tenant; não presuma que o parâmetro `?loja=` troca sozinho o cardápio público. Antes de compartilhar, configure o host, publique e teste os links.
+- A Área Dev lista as lojas cadastradas no IndexedDB do navegador atual e inclui a configuração pública carregada em `config/loja.js`.
+- O botão **Testar todas** valida campos básicos de cada cadastro e tenta consultar o endpoint de saúde do Supabase Auth.
+- O botão **Como corrigir** explica os problemas detectados e os próximos passos recomendados.
+- O diagnóstico não consulta pedidos nem clientes, não concede privilégios no banco e não substitui a verificação de `public.store_admins` e RLS.
+- **Importante:** o catálogo é local ao navegador/domínio. Para aparecerem na lista, as lojas precisam estar cadastradas/importadas nesse navegador. A versão não descobre automaticamente lojas que estejam apenas em outro dispositivo ou em outro projeto Supabase.
+- Para publicar, envie os arquivos atualizados ao repositório/hosting e publique manualmente. Nenhuma publicação ou alteração no Supabase é feita automaticamente por este ZIP.

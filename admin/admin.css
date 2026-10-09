@@ -314,3 +314,6 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13p
 
 /* V8.5 — Área do Dev */
 .central-dev-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}.central-dev-check{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border:1px solid var(--borda,#e8e8e8);border-radius:12px;background:var(--superficie,#fff)}.central-dev-tips{padding-left:20px;line-height:1.8;color:var(--texto-secundario,#555)}.central-dev-tips code{font-size:12px}@media(max-width:640px){.central-dev-list{grid-template-columns:1fr}}
+
+/* V9.1 — diagnóstico multi-lojas da Área Dev */
+.dev-stores-card{margin:14px auto;max-width:1180px}.dev-disclaimer{font-size:11px;line-height:1.65;color:var(--texto3,#687080);background:var(--neutro,#f6f7f9);padding:11px 13px;border-radius:10px;margin:0 0 14px}.dev-stores-table{min-width:720px}.dev-stores-table td{vertical-align:top}.dev-stores-table td small{font-size:11px;line-height:1.5;white-space:normal;display:block;max-width:440px}.dev-store-meta{margin-top:4px;color:var(--texto3,#687080)}.dev-diagnostic-footer{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:10px;color:var(--texto3,#687080);margin-top:12px}.dev-stores-card .central-table-wrap{overflow-x:auto}

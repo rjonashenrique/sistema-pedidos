@@ -1,19 +1,48 @@
 {
   "rewrites": [
-    { "source": "/admin", "destination": "/admin/admin.html" }
+    {
+      "source": "/admin",
+      "destination": "/admin/admin.html"
+    },
+    {
+      "source": "/dev/admin",
+      "destination": "/dev/admin/admin.html"
+    },
+    {
+      "source": "/dono",
+      "destination": "/dono/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
       ]
     },
     {
       "source": "/manifest.webmanifest",
       "headers": [
-        { "key": "Content-Type", "value": "application/manifest+json" }
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/dev",
+      "destination": "/dev/",
+      "permanent": true
+    },
+    {
+      "source": "/dono",
+      "destination": "/dono/",
+      "permanent": true
     }
   ]
 }
