@@ -62,3 +62,17 @@ Depois da migration:
 `Cadastro → Criar minha hamburgueria → Abrir meu painel`
 
 deve funcionar com o OWNER vinculado ao tenant.
+
+
+## AdmDev — Super Admin da plataforma
+
+Arquivo novo: `supabase/admdev-super-admin.sql`.
+
+1. No Supabase correto, confirme que `rojonas71@gmail.com` existe em **Authentication → Users** e concluiu a verificação de e-mail.
+2. Execute `supabase/admdev-super-admin.sql` no SQL Editor com uma conta administrativa do banco. O script é reexecutável e autoriza somente o usuário Auth com esse e-mail exato.
+3. Publique novamente esta pasta no Netlify.
+4. Abra `/super-admin/` e entre com o e-mail autorizado e a senha já cadastrada no Supabase Auth.
+
+A autorização do painel valida tanto o e-mail esperado quanto a linha ativa em `platform_admins`; o frontend não consegue conceder a si mesmo a função. Nunca coloque `service_role` no navegador.
+
+**Limitação importante:** a autorização da interface não substitui políticas RLS específicas para leitura/gestão global. Revise as políticas de cada tabela e implemente operações administrativas privilegiadas em Edge Functions/server-side antes de usar dados reais em produção. Esta alteração não foi executada no seu Supabase nem publicada no Netlify automaticamente.
