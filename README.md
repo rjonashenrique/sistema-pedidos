@@ -478,3 +478,36 @@ Link de exemplo após publicar: `https://SEU-DOMINIO/dono/?loja=brasa-burger`.
 - O diagnóstico não consulta pedidos nem clientes, não concede privilégios no banco e não substitui a verificação de `public.store_admins` e RLS.
 - **Importante:** o catálogo é local ao navegador/domínio. Para aparecerem na lista, as lojas precisam estar cadastradas/importadas nesse navegador. A versão não descobre automaticamente lojas que estejam apenas em outro dispositivo ou em outro projeto Supabase.
 - Para publicar, envie os arquivos atualizados ao repositório/hosting e publique manualmente. Nenhuma publicação ou alteração no Supabase é feita automaticamente por este ZIP.
+
+
+## V9.2 — Configuração individual por proprietário
+
+- `config/lojas.js` é o catálogo publicado das lojas que podem usar links individuais.
+- Cada entrada define `nome`, `slug` e seu próprio bloco `supabase` (URL + Publishable key pública). Assim, lojas podem usar projetos Supabase diferentes.
+- O link individual tem o formato `https://SEU-DOMINIO/dono/?loja=SLUG`. A Área Dev agora tem o botão **Copiar link do dono** por loja.
+- O sistema não inventa mais uma loja copiando a configuração da Brasa Burger quando recebe um slug desconhecido. Slugs ausentes do catálogo exibem uma mensagem clara.
+- Para adicionar uma loja: edite o exemplo em `config/lojas.js`, informe nome, slug único, URL e Publishable key pública; publique os arquivos; execute os SQLs necessários no projeto Supabase daquela loja e vincule o e-mail do proprietário ao slug correto em `public.store_admins`.
+- O link não autoriza acesso sozinho: o login, papel `owner` e as políticas RLS continuam obrigatórios. Nunca use `service_role` no frontend.
+- A configuração do catálogo é estática e pública; não é um cadastro global sincronizado por banco. Adicionar uma entrada exige republicar o site.
+
+
+## V9.3 — Criar lojas dentro do aplicativo
+
+A versão V9.3 adiciona um fluxo inicial de criação e gerenciamento de lojas sem editar `config/loja.js` para cada novo lojista.
+
+- **Criar loja:** `/criar-loja/` — o responsável cria conta/entra, cadastra nome, slug, WhatsApp, endereço, descrição, logo e banner.
+- **Produtos:** no painel do lojista, cada dono pode adicionar e excluir seus produtos e definir preço, categoria, descrição e URL de imagem.
+- **Isolamento:** as tabelas `stores` e `store_products` usam RLS; cada dono só gerencia suas próprias lojas/produtos.
+- **Aprovação:** novas lojas começam como `pending`. Um administrador revisa e publica pelo SQL Editor do Supabase.
+- **Link público:** após a publicação, `https://SEU-DOMINIO/loja/?slug=slug-da-loja`. A página pública mostra apenas lojas publicadas e produtos disponíveis e monta o pedido para WhatsApp.
+
+### Ativação obrigatória no Supabase
+
+1. Abra o projeto Supabase que será o banco central da plataforma.
+2. Entre em **SQL Editor** e execute todo o arquivo `supabase/store-builder.sql`.
+3. Em **Authentication → URL Configuration**, configure o Site URL e Redirect URLs do domínio publicado (por exemplo `https://SEU-DOMINIO/**`).
+4. Publique os arquivos do ZIP no Netlify/Vercel e teste com uma conta de lojista separada da conta administradora.
+5. Para aprovar uma loja, revise os dados e execute no SQL Editor, como administrador: `update public.stores set status='published' where slug='slug-da-loja';`.
+6. Para suspender uma loja: `update public.stores set status='suspended' where slug='slug-da-loja';`.
+
+**Importante:** o navegador usa somente a publishable key já presente em `config/loja.js`. Nunca adicione service-role/secret key ao ZIP. A criação de lojas depende de executar a migração SQL; não foi executada automaticamente no projeto Supabase nem foi feito deploy pelo pacote. A página pública de catálogo/WhatsApp está incluída, mas a sincronização de pedidos com a antiga tabela `orders` e os recursos completos do painel de pedidos permanecem separados deste primeiro fluxo de Store Builder.

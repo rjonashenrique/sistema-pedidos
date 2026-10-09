@@ -11,6 +11,14 @@
     {
       "source": "/dono",
       "destination": "/dono/index.html"
+    },
+    {
+      "source": "/criar-loja",
+      "destination": "/criar-loja/index.html"
+    },
+    {
+      "source": "/loja",
+      "destination": "/loja/index.html"
     }
   ],
   "headers": [
@@ -42,6 +50,16 @@
     {
       "source": "/dono",
       "destination": "/dono/",
+      "permanent": true
+    },
+    {
+      "source": "/criar-loja",
+      "destination": "/criar-loja/",
+      "permanent": true
+    },
+    {
+      "source": "/loja",
+      "destination": "/loja/",
       "permanent": true
     }
   ]

@@ -30,3 +30,13 @@
   from = "/dono"
   to = "/dono/"
   status = 301
+
+[[redirects]]
+  from = "/criar-loja"
+  to = "/criar-loja/"
+  status = 301
+
+[[redirects]]
+  from = "/loja"
+  to = "/loja/"
+  status = 301
