@@ -96,17 +96,24 @@
 
     var c = rows[0];
 
-    // Repara automaticamente uma empresa antiga que ficou sem store.
+    // Reparo automático idempotente: guarda o erro real para não mascarar
+    // problemas de permissões, RPC ausente ou vínculo com papel incorreto.
+    var repairError = null;
     if (!c.store_id) {
       var repair = await client.rpc('repair_my_company', { p_store_name: c.organization_name });
-      if (!repair.error && repair.data) {
+      if (repair.error) {
+        repairError = repair.error.message || repair.error.details || 'A função de reparo não pôde ser executada.';
+      } else {
         var repaired = await getContext();
         if (repaired.length) c = repaired[0];
       }
     }
 
     if (!c.store_id) {
-      errorBox('Empresa encontrada, mas a loja está incompleta', 'O vínculo da sua hamburgueria existe, porém a loja não foi criada corretamente. Execute a migration 2.2 e recarregue o painel.');
+      var detail = 'O vínculo da empresa existe, mas não há uma loja associada. Nenhum dado foi apagado.';
+      if (repairError) detail += ' Diagnóstico do Supabase: ' + repairError + '. Abra o arquivo supabase/DIAGNOSTICO-BURGER26.sql e siga as instruções antes de alterar os dados.';
+      else detail += ' A função de reparo não retornou uma loja. Confira supabase/saas-v2-onboarding.sql e o resultado do diagnóstico.';
+      errorBox('Empresa encontrada, mas a loja está incompleta', detail, '<p><a class="btn" href="/painel/?retry=1">Tentar novamente</a></p>');
       return;
     }
 
