@@ -32,8 +32,8 @@
   status = 301
 
 [[redirects]]
-  from = "/criar-loja"
-  to = "/criar-loja/"
+  from = "/plataforma"
+  to = "/plataforma/"
   status = 301
 
 [[redirects]]

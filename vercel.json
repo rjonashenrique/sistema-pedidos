@@ -13,8 +13,8 @@
       "destination": "/dono/index.html"
     },
     {
-      "source": "/criar-loja",
-      "destination": "/criar-loja/index.html"
+      "source": "/plataforma",
+      "destination": "/plataforma/index.html"
     },
     {
       "source": "/loja",
@@ -53,8 +53,8 @@
       "permanent": true
     },
     {
-      "source": "/criar-loja",
-      "destination": "/criar-loja/",
+      "source": "/plataforma",
+      "destination": "/plataforma/",
       "permanent": true
     },
     {

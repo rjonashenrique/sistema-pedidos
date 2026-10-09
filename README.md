@@ -490,24 +490,23 @@ Link de exemplo após publicar: `https://SEU-DOMINIO/dono/?loja=brasa-burger`.
 - O link não autoriza acesso sozinho: o login, papel `owner` e as políticas RLS continuam obrigatórios. Nunca use `service_role` no frontend.
 - A configuração do catálogo é estática e pública; não é um cadastro global sincronizado por banco. Adicionar uma entrada exige republicar o site.
 
+## V10 — Plataforma SaaS central multi-loja (migração planejada)
 
-## V9.3 — Criar lojas dentro do aplicativo
+A V10 adiciona `/plataforma/` para criar conta, entrar, criar loja, editar dados, cadastrar produtos e copiar links públicos em `/loja/?slug=...`. O catálogo é armazenado no Supabase central, com `store_id` e RLS por associação do usuário. A Brasa Burger permanece configurada no legado; a migração para `saas_stores` é aditiva e está documentada em `MIGRACAO-V10.md`.
 
-A versão V9.3 adiciona um fluxo inicial de criação e gerenciamento de lojas sem editar `config/loja.js` para cada novo lojista.
+**Antes de substituir a V9.2:** faça backup, aplique `supabase/migrations/V10_saas_multiloja.sql` no projeto correto, configure o administrador da plataforma e execute os testes descritos no guia. Não há cobrança recorrente real integrada nesta versão; a tabela de assinaturas representa o estado interno/trial, não uma cobrança confirmada.
 
-- **Criar loja:** `/criar-loja/` — o responsável cria conta/entra, cadastra nome, slug, WhatsApp, endereço, descrição, logo e banner.
-- **Produtos:** no painel do lojista, cada dono pode adicionar e excluir seus produtos e definir preço, categoria, descrição e URL de imagem.
-- **Isolamento:** as tabelas `stores` e `store_products` usam RLS; cada dono só gerencia suas próprias lojas/produtos.
-- **Aprovação:** novas lojas começam como `pending`. Um administrador revisa e publica pelo SQL Editor do Supabase.
-- **Link público:** após a publicação, `https://SEU-DOMINIO/loja/?slug=slug-da-loja`. A página pública mostra apenas lojas publicadas e produtos disponíveis e monta o pedido para WhatsApp.
+## V10.3 — criação administrativa de lojas para proprietários
+A rota `/dev/` agora é um painel de administração SaaS: mostra as lojas e permite ao Dev criar uma loja, associando-a ao e-mail de uma conta que já existe no Supabase Auth. O proprietário precisa primeiro se cadastrar em `/plataforma/` e confirmar seu e-mail. O painel não cria senhas nem utiliza `service_role` no navegador.
 
-### Ativação obrigatória no Supabase
+Antes de usar a função de criação administrativa:
+1. Faça backup do banco e execute primeiro a migração V10 original, caso ainda não tenha sido aplicada.
+2. Cadastre a conta do desenvolvedor em `public.saas_platform_admins` usando o UUID correto de `auth.users`.
+3. Execute `supabase/migrations/V10_3_dev_create_store_for_owner.sql` no SQL Editor do mesmo projeto Supabase central.
+4. Cadastre o proprietário em `/plataforma/`, confirme o e-mail e só então crie a loja em `/dev/`.
+5. Teste com duas contas e confirme que a RLS impede acesso cruzado antes de publicar para clientes.
 
-1. Abra o projeto Supabase que será o banco central da plataforma.
-2. Entre em **SQL Editor** e execute todo o arquivo `supabase/store-builder.sql`.
-3. Em **Authentication → URL Configuration**, configure o Site URL e Redirect URLs do domínio publicado (por exemplo `https://SEU-DOMINIO/**`).
-4. Publique os arquivos do ZIP no Netlify/Vercel e teste com uma conta de lojista separada da conta administradora.
-5. Para aprovar uma loja, revise os dados e execute no SQL Editor, como administrador: `update public.stores set status='published' where slug='slug-da-loja';`.
-6. Para suspender uma loja: `update public.stores set status='suspended' where slug='slug-da-loja';`.
+A função cria a loja, associação `owner` e assinatura de teste de 7 dias em uma única transação. Ela não migra nem exclui os pedidos legados da Brasa Burger. Não execute em produção sem backup e validação da migração V10.
 
-**Importante:** o navegador usa somente a publishable key já presente em `config/loja.js`. Nunca adicione service-role/secret key ao ZIP. A criação de lojas depende de executar a migração SQL; não foi executada automaticamente no projeto Supabase nem foi feito deploy pelo pacote. A página pública de catálogo/WhatsApp está incluída, mas a sincronização de pedidos com a antiga tabela `orders` e os recursos completos do painel de pedidos permanecem separados deste primeiro fluxo de Store Builder.
+### Prévia de link por slug (V10.4)
+Na Área Dev, o campo do slug sugere um endereço a partir do nome da loja e mostra a prévia `https://{slug}.netlify.app`. Esse formato é uma convenção de URL: cada subdomínio precisa existir/ser configurado na Netlify e a aplicação deve identificar a loja pelo hostname. Até isso estar configurado, use o link alternativo do domínio principal com `?slug=`.
