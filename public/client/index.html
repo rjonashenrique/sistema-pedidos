@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1430"><title>Pedidos Pro — Cardápio</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="config.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="logo">P</span><div><b id="storeName">Pedidos Pro</b><small>Peça fácil. Receba rápido.</small></div></div><button id="openAccount" class="ghost">Minha conta</button></header>
+<main>
+<section class="hero"><p class="eyebrow">CARDÁPIO DIGITAL</p><h1>Seu próximo favorito<br><span>está aqui.</span></h1><p>Escolha seus produtos, monte seu pedido e envie direto para o WhatsApp da loja.</p><div id="storeNotice" class="notice"></div></section>
+<section class="toolbar"><input id="search" type="search" placeholder="Buscar no cardápio…"><div id="categories" class="categories"></div></section>
+<section id="products" class="products"><div class="loading">Carregando cardápio…</div></section>
+<section class="history"><div class="section-head"><div><p class="eyebrow">ÁREA DO CLIENTE</p><h2>Seus pedidos</h2></div><button id="refreshOrders" class="ghost">Atualizar</button></div><div id="orders"><p class="muted">Entre na sua conta para ver seu histórico e acompanhar os pedidos.</p></div></section>
+</main>
+<button id="cartButton" class="cart-fab">🛒 <span id="cartCount">0 itens</span><b id="cartTotal">R$ 0,00</b></button>
+<div id="cartDrawer" class="drawer hidden"><div class="drawer-head"><h2>Seu pedido</h2><button id="closeCart" class="icon-btn">✕</button></div><div id="cartItems"></div><div class="cart-summary"><label>Entrega<select id="fulfillment"><option value="pickup">Retirar na loja</option><option value="delivery">Entrega</option></select></label><label>Forma de pagamento<select id="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option></select></label><label>Nome<input id="customerName" placeholder="Seu nome"></label><label>WhatsApp<input id="customerPhone" placeholder="DDD + número"></label><div id="addressFields" class="hidden"><label>Endereço de entrega<textarea id="address" placeholder="Rua, número, bairro e referência"></textarea></label></div><label>Observações<textarea id="notes" placeholder="Ex.: sem cebola, troco para…"></textarea></label><div class="total-line"><span>Total</span><strong id="drawerTotal">R$ 0,00</strong></div><button id="checkout" class="primary full">Salvar pedido e abrir WhatsApp</button><p class="tiny">É necessário entrar na conta para salvar o histórico. O pedido será registrado antes de abrir o WhatsApp.</p></div></div>
+<div id="accountModal" class="modal hidden"><div class="modal-card"><button id="closeAccount" class="icon-btn close">✕</button><p class="eyebrow">ÁREA DO CLIENTE</p><h2 id="authTitle">Entre na sua conta</h2><p class="muted">Acompanhe pedidos e consulte seu histórico.</p><form id="authForm"><label>E-mail<input type="email" id="authEmail" required autocomplete="email"></label><label>Senha<input type="password" id="authPassword" required minlength="6" autocomplete="current-password"></label><label id="nameField" class="hidden">Nome completo<input id="authName" autocomplete="name"></label><button class="primary full" id="authSubmit" type="submit">Entrar</button></form><button id="toggleAuth" class="text-btn">Criar uma conta</button><button id="signOut" class="text-btn hidden">Sair da conta</button><p id="authMessage" class="tiny"></p></div></div>
+<div id="toast" class="toast hidden"></div>
+<footer><span>Pedidos Pro</span><span>Pedidos simples, direto no WhatsApp.</span></footer>
+</body></html>
